@@ -39,10 +39,12 @@ export async function loadDashboard(
 }
 
 export async function loadLidar(signal: AbortSignal): Promise<LidarData> {
-  const [waypoints, history, obstruction] = await Promise.all([
+  const [waypoints, history, obstruction, clustered_changes, waypoint_proximity] = await Promise.all([
     getJSON<LidarData["waypoints"]>("/lidar/waypoints.json", signal),
     getJSON<LidarData["history"]>("/lidar/waypoint_anomalies.json", signal),
     getJSON<LidarData["obstruction"]>("/lidar/anomalies.json", signal),
+    getJSON<LidarData["clustered_changes"]>("/lidar/clustered_changes.json", signal),
+    getJSON<LidarData["waypoint_proximity"]>("/lidar/waypoint_proximity.json", signal),
   ]);
-  return { waypoints, history, obstruction };
+  return { waypoints, history, obstruction, clustered_changes, waypoint_proximity }; 
 }
