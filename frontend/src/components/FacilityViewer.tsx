@@ -44,7 +44,9 @@ export default function FacilityViewer({
   const select = useRef(onSelect);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
-  const [markerMode, setMarkerMode] = useState<"proximity" | "history">("proximity");
+  const [markerMode, setMarkerMode] = useState<"proximity" | "history">(
+    "proximity",
+  );
 
   useEffect(() => {
     select.current = onSelect;
@@ -66,9 +68,14 @@ export default function FacilityViewer({
       renderer = new THREE.WebGLRenderer({ antialias: true });
     } catch {
       queueMicrotask(() => {
-        setError("3D rendering is unavailable. Use the waypoint buttons to inspect the data.");
+        if (!disposed)
+          setError(
+            "3D rendering is unavailable. Use the waypoint buttons to inspect the data.",
+          );
       });
-      return;
+      return () => {
+        disposed = true;
+      };
     }
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -113,8 +120,10 @@ export default function FacilityViewer({
       );
       marker.renderOrder = 2;
       marker.userData.locationId = waypoint.location_id;
-      marker.userData.historyColor = severityColors[history?.highest_severity ?? "NONE"];
-      marker.userData.proximityColor = proximityColors[proximity?.status ?? ""] ?? "#7c94aa";
+      marker.userData.historyColor =
+        severityColors[history?.highest_severity ?? "NONE"];
+      marker.userData.proximityColor =
+        proximityColors[proximity?.status ?? ""] ?? "#7c94aa";
       markers.add(marker);
     }
     scene.add(markers);
@@ -166,7 +175,8 @@ export default function FacilityViewer({
               object.geometry.dispose();
               for (const mat of Array.isArray(object.material)
                 ? object.material
-                : [object.material]) mat.dispose();
+                : [object.material])
+                mat.dispose();
             }
           });
           return;
@@ -175,7 +185,8 @@ export default function FacilityViewer({
           if (object instanceof THREE.Mesh) {
             for (const mat of Array.isArray(object.material)
               ? object.material
-              : [object.material]) mat.dispose();
+              : [object.material])
+              mat.dispose();
             object.material = material;
           }
         });
@@ -184,9 +195,10 @@ export default function FacilityViewer({
       },
       undefined,
       () => {
-        if (!disposed) setError(
-          "Could not load facility.glb. The waypoint and obstruction overlays are still available.",
-        );
+        if (!disposed)
+          setError(
+            "Could not load facility.glb. The waypoint and obstruction overlays are still available.",
+          );
       },
     );
 
@@ -208,7 +220,8 @@ export default function FacilityViewer({
       if (
         !markers.visible ||
         Math.hypot(event.clientX - down.x, event.clientY - down.y) > 5
-      ) return;
+      )
+        return;
       const rect = renderer.domElement.getBoundingClientRect();
       raycaster.setFromCamera(
         new THREE.Vector2(
@@ -236,11 +249,15 @@ export default function FacilityViewer({
       renderer.domElement.removeEventListener("pointerdown", pointerDown);
       renderer.domElement.removeEventListener("pointerup", pointerUp);
       scene.traverse((object) => {
-        if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments) {
+        if (
+          object instanceof THREE.Mesh ||
+          object instanceof THREE.LineSegments
+        ) {
           object.geometry.dispose();
           for (const mat of Array.isArray(object.material)
             ? object.material
-            : [object.material]) mat.dispose();
+            : [object.material])
+            mat.dispose();
         }
       });
       material.dispose();
@@ -257,9 +274,10 @@ export default function FacilityViewer({
     for (const object of state.markers.children) {
       if (!(object instanceof THREE.Mesh)) continue;
       object.scale.setScalar(object.userData.locationId === selected ? 1.7 : 1);
-      const color = markerMode === "proximity"
-        ? object.userData.proximityColor
-        : object.userData.historyColor;
+      const color =
+        markerMode === "proximity"
+          ? object.userData.proximityColor
+          : object.userData.historyColor;
       (object.material as THREE.MeshBasicMaterial).color.set(color as string);
     }
   }, [selected, showHistory, showObstruction, markerMode, data]);
@@ -274,37 +292,48 @@ export default function FacilityViewer({
 
   return (
     <div className="viewer-wrap">
-      <div className="viewer" ref={container} />
-      <div className="viewer-label">
-        <span className="dot cyan" />
-        {ready ? "FACILITY MODEL LOADED" : error ? "MODEL UNAVAILABLE" : "LOADING FACILITY MODEL"}
+      <div className="viewer-stage">
+        <div className="viewer" ref={container} />
+        <div className="viewer-label">
+          <span className="dot cyan" />
+          {ready
+            ? "FACILITY MODEL LOADED"
+            : error
+              ? "MODEL UNAVAILABLE"
+              : "LOADING FACILITY MODEL"}
+        </div>
+        <button className="reset-view" onClick={resetView}>
+          ↺ Reset view
+        </button>
+        {error && (
+          <div className="viewer-error" role="alert">
+            {error}
+          </div>
+        )}
+        <div className="viewer-help">
+          Drag to orbit · Scroll to zoom · Click a waypoint
+        </div>
+        <div className="axis-label">X / Y floor plane · Z up · meters</div>
       </div>
-      <button className="reset-view" onClick={resetView}>
-        ↺ Reset view
-      </button>
-      {error && <div className="viewer-error" role="alert">{error}</div>}
-      <div className="viewer-help">
-        Drag to orbit · Scroll to zoom · Click a waypoint
-      </div>
-      <div className="axis-label">X / Y floor plane · Z up · meters</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", padding: "10px 4px" }}>
-        <label htmlFor="marker-color-mode" style={{ fontSize: 12 }}>Waypoint colors:</label>
+      <div className="marker-toolbar">
+        <label htmlFor="marker-color-mode">Waypoint colors:</label>
         <select
           id="marker-color-mode"
           value={markerMode}
-          onChange={(event) => setMarkerMode(event.target.value as "proximity" | "history")}
-          style={{ background: "#152c3b", color: "#e8f0f5", border: "1px solid #355266", borderRadius: 6, padding: "5px 8px" }}
+          onChange={(event) =>
+            setMarkerMode(event.target.value as "proximity" | "history")
+          }
         >
           <option value="proximity">Obstruction proximity</option>
           <option value="history">Historical severity</option>
         </select>
-        <span style={{ fontSize: 11, color: "#a9bac7" }}>
+        <span>
           {markerMode === "proximity"
             ? "🔴 Near · 🟠 Caution · 🟢 Clear · ⚪ No data"
             : "🔴 Critical · 🟠 High · 🟡 Medium · 🟢 Low · ⚪ None"}
         </span>
       </div>
-      <p style={{ fontSize: 11, color: "#9eb1c0", margin: "0 4px 8px" }}>
+      <p className="coordinate-note">
         Proximity uses demo-scaled coordinates; not validated robot clearance.
       </p>
     </div>
