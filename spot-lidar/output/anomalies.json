@@ -1,0 +1,19 @@
+{
+    "id": "change_001",
+    "type": "new_obstruction",
+    "source": "synthetic_point_cloud_comparison",
+    "coordinate_system": "facility_local",
+    "units": "meters",
+    "position": {
+        "x": 2.4,
+        "y": 1.9,
+        "z": 0.5704518740131819
+    },
+    "dimensions": {
+        "x": 0.8000000000000005,
+        "y": 0.8000000000000007,
+        "z": 0.8590962519736363
+    },
+    "point_count": 2231,
+    "review_status": "unreviewed"
+}
