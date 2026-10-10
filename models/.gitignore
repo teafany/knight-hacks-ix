@@ -1,0 +1,11 @@
+*.pt
+*.pth
+*.ckpt
+*.tar.gz
+
+# Only reviewed final checkpoints are selected for publication.
+!gauge/yolo11n-best.pt
+!corrosion/yoke-suspension/corrosion_20261010_212044/model.pt
+__pycache__/
+*.pyc
+.DS_Store

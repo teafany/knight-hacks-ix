@@ -1,0 +1,26 @@
+{
+  "task": "gauge_center_and_whole_pointer_detection",
+  "filename": "yolo11n-best.pt",
+  "sha256": "c2406a1a1f5cd838b60bee78dd902949921ec5bf70f8a7b5e63dc16c4b92ca0b",
+  "size_bytes": 5476826,
+  "source": "User-exported best.pt from runs/gauge_small/weights/best.pt on the AMD server",
+  "training_epochs_reported": 80,
+  "architecture": "YOLO11n",
+  "classes": ["Center", "Gauge", "Needle"],
+  "needle_semantics": "Whole pointer including counterweight, not a tip label",
+  "validation": {
+    "source": "User-pasted remote training report",
+    "images": 33,
+    "precision": 0.996,
+    "recall": 0.993,
+    "map50": 0.995,
+    "map50_95": 0.897,
+    "independent_test": false,
+    "numeric_reading_accuracy": null
+  },
+  "local_validation": "Checkpoint SHA-256 and class names checked; CPU inference reproduces remote detections",
+  "numeric_reader_status": "Experimental, separately calibrated, requires review",
+  "physical_robot": false,
+  "automatic_remote_sync": false,
+  "license_notes": "Ultralytics AGPL-3.0/commercial terms; training dataset attribution in gauge-training/ATTRIBUTION.md"
+}
