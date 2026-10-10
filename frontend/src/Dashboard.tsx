@@ -20,7 +20,11 @@ const timestamp = (value: string | null | undefined) =>
       }) + " UTC"
     : "Not available";
 
-function Dashboard() {
+type DashboardProps = {
+  onHome?: () => void;
+};
+
+function Dashboard({ onHome }: DashboardProps) {
   const [mode, setMode] = useState<"demo" | "api">("demo");
   const [refresh, setRefresh] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
@@ -121,11 +125,14 @@ function Dashboard() {
         <a className="brand" href="#overview">
           <span className="brand-mark">S</span>
           <span>
-            SPOT<span className="brand-sub">FACILITY OPERATIONS</span>
+            SPOT<span className="brand-sub">FACILITY LIDAR</span>
           </span>
         </a>
-        <div className="nav-label">WORKSPACE</div>
+        <div className="nav-label">LIDAR PAGE</div>
         <nav aria-label="Dashboard sections">
+          <button className="nav-home" type="button" onClick={onHome}>
+            <span>⌂</span>Home
+          </button>
           <a href="#overview" className="nav-active">
             <span>▦</span>Overview
           </a>
@@ -151,14 +158,14 @@ function Dashboard() {
       <div className="dashboard-content" id="overview">
         <header className="topbar">
           <span>
-            Workspace <span className="slash">/</span> Facility overview
+            LiDAR <span className="slash">/</span> Facility digital twin
           </span>
           <span className="prototype-label">PROTOTYPE · V1</span>
         </header>
         <div className="page-heading">
           <div>
             <div className="eyebrow">INSPECTION INTELLIGENCE</div>
-            <h1>Facility overview</h1>
+            <h1>LiDAR workspace</h1>
             <p>
               Mission performance, historical findings, and a simulated digital
               twin.
@@ -788,7 +795,7 @@ function Dashboard() {
           </article>
         </section>
         <footer className="page-footer">
-          Knight Hacks IX · Synthetic facility inspection{" "}
+          Knight Hacks IX · Synthetic LiDAR workspace{" "}
           <span>Historical data prototype</span>
         </footer>
       </div>

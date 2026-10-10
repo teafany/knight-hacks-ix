@@ -371,6 +371,12 @@ footer svg {
   height: 24px;
 }
 
+.lidar-page {
+  min-height: 100vh;
+  background: #0d0d0b;
+  color: #f8f7f2;
+}
+
 .intro > *,
 .status-pill,
 .mission-card,
