@@ -5,6 +5,7 @@ import assetsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/ass
 import locationsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/locations.csv?raw";
 import missionsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/missions.csv?raw";
 import readingsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/readings.csv?raw";
+import replayNdjson from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/replay.ndjson?raw";
 import floorPlanUrl from "../../SPOT_KnightHacks_Challenge_Kit Part One/04_ASSETS/fictional_floor_plan.png";
 import "./DatasetDashboard.css";
 
@@ -46,6 +47,21 @@ type LocationRow = {
 
 type DatasetDashboardProps = {
   onHome?: () => void;
+};
+
+type ReplayEvent = {
+  mission_id: string;
+  timestamp: string;
+  event_type: string;
+  details: {
+    location_id?: string;
+  };
+};
+
+type MissionPath = {
+  missionId: string;
+  label: string;
+  locationIds: string[];
 };
 
 const datasets: { source: DatasetSource; csv: string }[] = [
@@ -159,6 +175,35 @@ function parseCsv(csv: string): CsvRow[] {
   });
 }
 
+function buildMissionPaths(): MissionPath[] {
+  const missionRows = parseCsv(missionsCsv);
+  const missionNames = new Map(
+    missionRows.map((row) => [row.mission_id, row.mission_name]),
+  );
+  const events = replayNdjson
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => JSON.parse(line) as ReplayEvent)
+    .filter(
+      (event) =>
+        event.event_type === "ACTION_STARTED" && event.details.location_id,
+    )
+    .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  const paths = new Map<string, string[]>();
+  events.forEach((event) => {
+    const locationId = event.details.location_id;
+    if (!locationId) return;
+    const current = paths.get(event.mission_id) ?? [];
+    if (current.at(-1) !== locationId) current.push(locationId);
+    paths.set(event.mission_id, current);
+  });
+  return Array.from(paths.entries()).map(([missionId, locationIds]) => ({
+    missionId,
+    label: missionNames.get(missionId) ?? missionId,
+    locationIds,
+  }));
+}
+
 function titleFor(source: DatasetSource, row: CsvRow) {
   if (source === "Actions") return row.action_id;
   if (source === "Anomalies") return row.anomaly_id;
@@ -225,6 +270,10 @@ function buildRecords(): DatasetRecord[] {
 function DatasetDashboard({ onHome }: DatasetDashboardProps) {
   const [activeWaypoint, setActiveWaypoint] = useState("WP05");
   const [selectedWaypoints, setSelectedWaypoints] = useState<string[]>([]);
+  const missionPaths = useMemo(() => buildMissionPaths(), []);
+  const [selectedMissionId, setSelectedMissionId] = useState(
+    () => missionPaths[0]?.missionId ?? "",
+  );
   const records = useMemo(() => buildRecords(), []);
   const locations = useMemo(
     (): LocationRow[] =>
@@ -269,6 +318,20 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
       locations.find((location) => location.location_id === waypoint),
     )
     .filter((location): location is LocationRow => Boolean(location));
+  const selectedMissionPath = missionPaths.find(
+    (mission) => mission.missionId === selectedMissionId,
+  );
+  const replayLocations = (selectedMissionPath?.locationIds ?? [])
+    .map((waypoint) =>
+      locations.find((location) => location.location_id === waypoint),
+    )
+    .filter((location): location is LocationRow => Boolean(location));
+  const selectedRelayPoints = selectedLocations
+    .map((location) => `${location.mapX},${location.mapY}`)
+    .join(" ");
+  const replayRelayPoints = replayLocations
+    .map((location) => `${location.mapX},${location.mapY}`)
+    .join(" ");
 
   return (
     <div className="dataset-dashboard">
@@ -277,6 +340,19 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
           <span>S</span>
           <strong>SPOT</strong>
         </button>
+        <label className="mission-path-control rail-control">
+          <span>Replay path</span>
+          <select
+            value={selectedMissionId}
+            onChange={(event) => setSelectedMissionId(event.target.value)}
+          >
+            {missionPaths.map((mission) => (
+              <option key={mission.missionId} value={mission.missionId}>
+                {mission.missionId} - {mission.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <section className="selection-rail" aria-label="Current search selection">
           <p>Current selection</p>
           {selectedLocations.length === 0 ? (
@@ -313,7 +389,7 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
           <div className="map-heading">
             <div>
               <p className="dataset-kicker">Facility map</p>
-              <h2>Hover a waypoint zone.</h2>
+              <h2>Select with the Map!</h2>
             </div>
             <div className="map-summary">
               <strong>{activeLocation?.location_name ?? "Select an area"}</strong>
@@ -327,6 +403,39 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
           <div className="map-shell">
             <div className="map-canvas">
               <img src={floorPlanUrl} alt="Fictional facility floor plan" />
+              <svg
+                className="relay-overlay"
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+                preserveAspectRatio="none"
+              >
+                <polyline className="relay-path replay" points={replayRelayPoints} />
+                {selectedLocations.length > 1 && (
+                  <polyline
+                    className="relay-path selected"
+                    points={selectedRelayPoints}
+                  />
+                )}
+                {replayLocations.map((location, index) => (
+                  <g
+                    className="relay-node replay"
+                    key={`${selectedMissionId}-${location.location_id}-${index}`}
+                    transform={`translate(${location.mapX} ${location.mapY})`}
+                  >
+                    <circle r="0.92" />
+                  </g>
+                ))}
+                {selectedLocations.map((location, index) => (
+                  <g
+                    className="relay-node selected"
+                    key={location.location_id}
+                    transform={`translate(${location.mapX} ${location.mapY})`}
+                  >
+                    <circle r="1.45" />
+                    <text y="0.35">{index + 1}</text>
+                  </g>
+                ))}
+              </svg>
               {locations.map((location) => (
                 <button
                   key={location.location_id}

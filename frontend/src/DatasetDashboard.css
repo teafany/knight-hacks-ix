@@ -444,6 +444,44 @@
   color: #aaa89f;
 }
 
+.mission-path-control {
+  display: grid;
+  min-width: 220px;
+  gap: 6px;
+}
+
+.mission-path-control.rail-control {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #2a2923;
+  border-radius: 8px;
+  background: #171611;
+}
+
+.mission-path-control span {
+  color: #aaa89f;
+  font-size: 10px;
+}
+
+.mission-path-control.rail-control span {
+  color: #dfb238;
+}
+
+.mission-path-control.rail-control select {
+  width: 100%;
+}
+
+.mission-path-control select {
+  min-height: 36px;
+  border: 1px solid #333127;
+  border-radius: 8px;
+  background: #12120f;
+  color: #f8f7f2;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 12px;
+}
+
 .map-shell {
   position: relative;
   display: flex;
@@ -474,8 +512,61 @@
   object-fit: fill;
 }
 
+.relay-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.relay-path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.relay-path.replay {
+  stroke: rgba(248, 247, 242, 0.68);
+  stroke-width: 2;
+  stroke-dasharray: 7 7;
+  filter: drop-shadow(0 1px 2px rgba(18, 18, 15, 0.65));
+}
+
+.relay-path.selected {
+  stroke: #dfb238;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px rgba(18, 18, 15, 0.72));
+}
+
+.relay-node.selected circle {
+  fill: #dfb238;
+  stroke: #12120f;
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+}
+
+.relay-node.replay circle {
+  fill: rgba(248, 247, 242, 0.86);
+  stroke: rgba(18, 18, 15, 0.72);
+  stroke-width: 0.26;
+  vector-effect: non-scaling-stroke;
+}
+
+.relay-node.selected text {
+  fill: #12120f;
+  font-family: Manrope, sans-serif;
+  font-size: 2.2px;
+  font-weight: 800;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
 .waypoint-zone {
   position: absolute;
+  z-index: 2;
   border: 2px solid transparent;
   border-radius: 8px;
   background: rgba(223, 178, 56, 0.03);
