@@ -1,0 +1,48 @@
+import type {
+  DashboardData,
+  Finding,
+  LidarData,
+  Metrics,
+  Mission,
+} from "./types";
+
+export async function getJSON<T>(url: string, signal: AbortSignal): Promise<T> {
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
+  return response.json() as Promise<T>;
+}
+
+export async function loadDashboard(
+  mode: "demo" | "api",
+  signal: AbortSignal,
+): Promise<DashboardData> {
+  if (mode === "demo")
+    return getJSON<DashboardData>("/demo/dashboard.json", signal);
+  const [health, metrics, missions, findings] = await Promise.all([
+    getJSON<{ status: string }>("/api/health", signal),
+    getJSON<Metrics>("/api/metrics", signal),
+    getJSON<{ results: Mission[]; next: string | null }>(
+      "/api/missions?limit=500",
+      signal,
+    ),
+    getJSON<{ results: Finding[]; next: string | null }>(
+      "/api/findings?limit=500",
+      signal,
+    ),
+  ]);
+  if (health.status !== "ok") throw new Error("The local API is not healthy");
+  if (missions.next || findings.next)
+    throw new Error(
+      "This prototype supports up to 500 missions and findings; extend pagination before using a larger dataset.",
+    );
+  return { metrics, missions: missions.results, findings: findings.results };
+}
+
+export async function loadLidar(signal: AbortSignal): Promise<LidarData> {
+  const [waypoints, history, obstruction] = await Promise.all([
+    getJSON<LidarData["waypoints"]>("/lidar/waypoints.json", signal),
+    getJSON<LidarData["history"]>("/lidar/waypoint_anomalies.json", signal),
+    getJSON<LidarData["obstruction"]>("/lidar/anomalies.json", signal),
+  ]);
+  return { waypoints, history, obstruction };
+}
