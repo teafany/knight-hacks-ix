@@ -1451,3 +1451,29 @@
     font-size: 20px;
   }
 }
+.operations-dashboard .marker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  color: #aaa89f;
+  font-size: 12px;
+}
+.operations-dashboard .marker-toolbar select {
+  background: #22221e;
+  color: #f8f7f2;
+  border: 1px solid #48473f;
+  border-radius: 12px;
+  padding: 8px;
+}
+.operations-dashboard .marker-toolbar span {
+  font-size: 11px;
+}
+.operations-dashboard .waypoint-stat strong {
+  overflow-wrap: anywhere;
+}
+
+.operations-dashboard .viewer-stage {
+  position: relative;
+}
