@@ -1185,3 +1185,254 @@
 .operations-dashboard .detail-button {
   color: #80601a;
 }
+
+.operations-dashboard {
+  color: #f8f7f2;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    #0d0d0b;
+  background-size: 64px 64px;
+}
+
+.operations-dashboard .sidebar {
+  background: #12120f;
+  border-right-color: #2a2923;
+}
+
+.operations-dashboard .brand,
+.operations-dashboard .page-heading h1,
+.operations-dashboard .panel h2,
+.operations-dashboard td strong,
+.operations-dashboard .waypoint-title h2,
+.operations-dashboard .comparison-row strong {
+  color: #f8f7f2;
+}
+
+.operations-dashboard .brand-mark {
+  background: #dfb238;
+  border-color: #dfb238;
+  color: #12120f;
+}
+
+.operations-dashboard .brand-sub,
+.operations-dashboard .nav-label,
+.operations-dashboard .eyebrow,
+.operations-dashboard .prototype-label,
+.operations-dashboard .page-heading p,
+.operations-dashboard .panel-heading p,
+.operations-dashboard .metric-label,
+.operations-dashboard .metric-card p,
+.operations-dashboard .connectivity,
+.operations-dashboard .sidebar-footer,
+.operations-dashboard .sidebar-footer > span:last-child,
+.operations-dashboard .waypoint-panel > p,
+.operations-dashboard .obstruction-panel > p,
+.operations-dashboard .comparison-panel > p,
+.operations-dashboard .legend,
+.operations-dashboard .coordinate-note,
+.operations-dashboard .mini-bars span,
+.operations-dashboard td small,
+.operations-dashboard .table-time,
+.operations-dashboard .filters,
+.operations-dashboard .finding-search > label:first-child,
+.operations-dashboard .review-toggle,
+.operations-dashboard .tiny-note,
+.operations-dashboard .page-footer,
+.operations-dashboard .topbar,
+.operations-dashboard .slash {
+  color: #aaa89f !important;
+}
+
+.operations-dashboard nav a,
+.operations-dashboard .nav-home {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px;
+  margin: 5px 0;
+  border: 0;
+  border-radius: 6px;
+  color: #d8d4c8;
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+}
+
+.operations-dashboard nav a span,
+.operations-dashboard .nav-home span {
+  min-width: 20px;
+  font-size: 19px;
+}
+
+.operations-dashboard nav a:hover,
+.operations-dashboard .nav-home:hover {
+  background: #25231c;
+  color: #dfb238;
+}
+
+.operations-dashboard nav a.nav-active {
+  background: #dfb238;
+  color: #12120f;
+}
+
+.operations-dashboard .topbar {
+  border-bottom-color: #333127;
+}
+
+.operations-dashboard .panel,
+.operations-dashboard .metric-card {
+  background: rgba(28, 27, 23, 0.96);
+  border-color: #333127;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.operations-dashboard .metric-card strong {
+  color: #f8f7f2;
+}
+
+.operations-dashboard .metric-3 strong,
+.operations-dashboard .improved,
+.operations-dashboard .mission-link,
+.operations-dashboard .text-button,
+.operations-dashboard .detail-button,
+.operations-dashboard .review-required {
+  color: #dfb238;
+}
+
+.operations-dashboard .source-banner {
+  background: rgba(223, 178, 56, 0.13);
+  border-color: rgba(223, 178, 56, 0.42);
+  color: #e8d194;
+}
+
+.operations-dashboard .mode-switch {
+  background: #171611;
+  border-color: #333127;
+}
+
+.operations-dashboard .mode-switch button {
+  color: #aaa89f;
+}
+
+.operations-dashboard .mode-switch button.active,
+.operations-dashboard .refresh-button {
+  background: #dfb238;
+  color: #12120f;
+}
+
+.operations-dashboard .refresh-button {
+  border: 0;
+}
+
+.operations-dashboard .cyan-badge,
+.operations-dashboard .neutral-badge,
+.operations-dashboard .count-pill {
+  background: #2b281e;
+  color: #dfb238;
+}
+
+.operations-dashboard .layer-toolbar {
+  background: #151410;
+  border-color: #333127;
+  color: #d8d4c8;
+}
+
+.operations-dashboard .layer-toolbar > span {
+  color: #8f8b7f;
+}
+
+.operations-dashboard .viewer-placeholder,
+.operations-dashboard .viewer {
+  background: #071017;
+}
+
+.operations-dashboard .legend,
+.operations-dashboard th,
+.operations-dashboard td,
+.operations-dashboard .comparison-row,
+.operations-dashboard .finding-dialog dl div {
+  border-color: #333127;
+}
+
+.operations-dashboard .waypoint-list button,
+.operations-dashboard .filters select,
+.operations-dashboard .finding-search input[type="search"] {
+  background: #12120f;
+  border-color: #333127;
+  color: #f8f7f2;
+}
+
+.operations-dashboard .waypoint-list button.selected {
+  background: #dfb238;
+  border-color: #dfb238;
+  color: #12120f;
+}
+
+.operations-dashboard th {
+  background: #151410;
+  color: #aaa89f;
+}
+
+.operations-dashboard td {
+  color: #d8d4c8;
+}
+
+.operations-dashboard .bar-track {
+  background: #333127;
+}
+
+.operations-dashboard .table-footer {
+  background: #151410;
+  color: #aaa89f;
+}
+
+.operations-dashboard .table-footer:hover {
+  background: #211f19;
+  color: #dfb238;
+}
+
+.operations-dashboard .detail-button {
+  border-color: #454235;
+  background: #151410;
+}
+
+.operations-dashboard .finding-dialog {
+  background: #171611;
+  border-color: #333127;
+  color: #f8f7f2;
+}
+
+.operations-dashboard .finding-dialog > p,
+.operations-dashboard .obstruction-panel dd,
+.operations-dashboard .finding-dialog dd {
+  color: #d8d4c8;
+}
+
+.operations-dashboard .close-dialog {
+  color: #aaa89f;
+}
+
+.operations-dashboard input[type="checkbox"] {
+  accent-color: #dfb238;
+}
+
+.operations-dashboard button:focus-visible,
+.operations-dashboard a:focus-visible,
+.operations-dashboard input:focus-visible,
+.operations-dashboard select:focus-visible {
+  outline-color: #dfb238;
+}
+
+@media (max-width: 960px) {
+  .operations-dashboard .nav-home {
+    justify-content: center;
+    font-size: 0;
+    padding: 12px 10px;
+  }
+
+  .operations-dashboard .nav-home span {
+    font-size: 20px;
+  }
+}

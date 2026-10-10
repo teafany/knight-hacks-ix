@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Dashboard from "./Dashboard";
 import robotImage from "./assets/spot-robot.svg";
 import "./App.css";
@@ -54,6 +55,44 @@ function ArrowIcon() {
 }
 
 export default function App() {
+  const [page, setPage] = useState<"landing" | "lidar">(() =>
+    window.location.hash === "#lidar" ? "lidar" : "landing",
+  );
+
+  useEffect(() => {
+    const onHashChange = () => {
+      if (window.location.hash === "#lidar") setPage("lidar");
+      if (window.location.hash === "#top") setPage("landing");
+    };
+
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  const openLandingPage = () => {
+    setPage("landing");
+    window.history.pushState(null, "", "#top");
+    window.setTimeout(() => {
+      document.getElementById("top")?.scrollIntoView();
+    }, 0);
+  };
+
+  const openLidarPage = (target = "digital-twin") => {
+    setPage("lidar");
+    window.history.pushState(null, "", "#lidar");
+    window.setTimeout(() => {
+      document.getElementById(target)?.scrollIntoView();
+    }, 0);
+  };
+
+  if (page === "lidar") {
+    return (
+      <main className="lidar-page" id="lidar">
+        <Dashboard onHome={openLandingPage} />
+      </main>
+    );
+  }
+
   return (
     <main className="site-shell">
       <section className="hero" id="top" aria-labelledby="hero-title">
@@ -72,11 +111,23 @@ export default function App() {
             reviewing spatial changes, and finding the events that matter.
           </p>
           <div className="actions">
-            <a href="#missions">
+            <a
+              href="#lidar"
+              onClick={(event) => {
+                event.preventDefault();
+                openLidarPage("missions");
+              }}
+            >
               Previous inspections
               <ArrowIcon />
             </a>
-            <a href="#digital-twin">
+            <a
+              href="#lidar"
+              onClick={(event) => {
+                event.preventDefault();
+                openLidarPage("digital-twin");
+              }}
+            >
               Explore LiDAR
               <ArrowIcon />
             </a>
@@ -130,15 +181,20 @@ export default function App() {
               </div>
               <h3>{capability.title}</h3>
               <p>{capability.text}</p>
-              <a className="capability-link" href={`#${capability.target}`}>
+              <a
+                className="capability-link"
+                href="#lidar"
+                onClick={(event) => {
+                  event.preventDefault();
+                  openLidarPage(capability.target);
+                }}
+              >
                 Open workspace <ArrowIcon />
               </a>
             </article>
           ))}
         </div>
       </section>
-
-      <Dashboard />
 
       <section className="workflow-section" id="workflow">
         <div className="workflow-intro">
