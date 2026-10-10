@@ -568,3 +568,19 @@ footer > * {
     transition: none;
   }
 }
+
+.capability-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  color: #dfb238;
+  font-size: 13px;
+}
+.capability-link svg {
+  width: 20px;
+  height: 20px;
+}
+.site-shell {
+  overflow: clip;
+}

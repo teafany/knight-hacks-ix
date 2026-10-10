@@ -1,3 +1,4 @@
+import Dashboard from "./Dashboard";
 import robotImage from "./assets/spot-robot.svg";
 import "./App.css";
 
@@ -5,30 +6,34 @@ const capabilities = [
   {
     id: "existing-inspections",
     number: "01",
-    title: "Mission replay",
-    text: "Bring mission status, replay events, sensor readings, locations, and timestamps into one calm operator view.",
-    meta: "Dashboard / Replay",
+    title: "Mission inspections",
+    text: "Compare mission completion, action failures, durations, and battery use across historical inspections.",
+    meta: "Dashboard / Missions",
+    target: "missions",
   },
   {
     id: "lidar-data",
     number: "02",
     title: "Spatial context",
-    text: "Understand every waypoint, asset, and inspection finding inside a two-floor digital twin.",
+    text: "Understand every waypoint, asset, and inspection finding inside a simulated facility digital twin.",
     meta: "3D / LiDAR",
+    target: "digital-twin",
   },
   {
     id: "anomaly-analysis",
     number: "03",
     title: "Actionable findings",
     text: "Turn raw inspection signals into prioritized anomalies with clear, explainable evidence.",
-    meta: "Analysis / Alerts",
+    meta: "Analysis / Findings",
+    target: "findings",
   },
   {
     id: "timeline-events",
     number: "04",
-    title: "Timeline clarity",
-    text: "Keep replay intelligence tied to real timestamps so teams can see what changed and when.",
-    meta: "Events / Time",
+    title: "Configuration comparison",
+    text: "Compare baseline and improved scenarios while keeping mission completion separate from action success.",
+    meta: "Baseline / Improved",
+    target: "missions",
   },
 ];
 
@@ -67,12 +72,12 @@ export default function App() {
             reviewing spatial changes, and finding the events that matter.
           </p>
           <div className="actions">
-            <a href="#existing-inspections">
+            <a href="#missions">
               Previous inspections
               <ArrowIcon />
             </a>
-            <a href="#lidar-data">
-              LiDAR predictions
+            <a href="#digital-twin">
+              Explore LiDAR
               <ArrowIcon />
             </a>
           </div>
@@ -81,15 +86,15 @@ export default function App() {
         <div className="visual" aria-label="Spot robot mission overview">
           <div className="status-pill">
             <span />
-            Replay synced
+            Synthetic inspection data
           </div>
           <div className="mission-card">
-            <p>Latest inspection</p>
-            <strong>04</strong>
-            <span>findings to review</span>
+            <p>Inspection workspace</p>
+            <strong>15</strong>
+            <span>facility waypoints</span>
             <div className="mission-meta">
-              <span>Floor 2</span>
-              <span>08:42:16</span>
+              <span>Synthetic dataset</span>
+              <span>Historical records</span>
             </div>
           </div>
           <div className="robot-wrap">
@@ -125,10 +130,15 @@ export default function App() {
               </div>
               <h3>{capability.title}</h3>
               <p>{capability.text}</p>
+              <a className="capability-link" href={`#${capability.target}`}>
+                Open workspace <ArrowIcon />
+              </a>
             </article>
           ))}
         </div>
       </section>
+
+      <Dashboard />
 
       <section className="workflow-section" id="workflow">
         <div className="workflow-intro">
@@ -140,21 +150,29 @@ export default function App() {
             <span>01</span>
             <div>
               <strong>Capture</strong>
-              <p>Mission, sensor, action, and spatial data arrive as one record.</p>
+              <p>
+                Mission, sensor, action, and spatial data arrive as one record.
+              </p>
             </div>
           </li>
           <li>
             <span>02</span>
             <div>
               <strong>Contextualize</strong>
-              <p>Readings connect to assets, locations, waypoints, and prior missions.</p>
+              <p>
+                Readings connect to assets, locations, waypoints, and prior
+                missions.
+              </p>
             </div>
           </li>
           <li>
             <span>03</span>
             <div>
               <strong>Prioritize</strong>
-              <p>Teams see what changed, why it matters, and where SPOT should go next.</p>
+              <p>
+                Teams see what changed, why it matters, and where SPOT should go
+                next.
+              </p>
             </div>
           </li>
         </ol>
