@@ -1,0 +1,137 @@
+[
+    {
+        "location_id": "WP01",
+        "position": {
+            "x": 0.9491905354919052,
+            "y": 1.8665054413542927,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP02",
+        "position": {
+            "x": 3.4336239103362387,
+            "y": 3.4374848851269646,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP03",
+        "position": {
+            "x": 4.6,
+            "y": 2.2805320435308345,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP04",
+        "position": {
+            "x": 4.076961394769613,
+            "y": 2.025151148730351,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP05",
+        "position": {
+            "x": 3.925280199252801,
+            "y": 2.160580411124547,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP06",
+        "position": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP07",
+        "position": {
+            "x": 4.233872976338729,
+            "y": 1.6846432889963725,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP08",
+        "position": {
+            "x": 3.5853051058530503,
+            "y": 0.8488512696493349,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP09",
+        "position": {
+            "x": 2.0266500622665005,
+            "y": 3.596130592503023,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP10",
+        "position": {
+            "x": 4.181569115815691,
+            "y": 3.6,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP11",
+        "position": {
+            "x": 3.3917808219178074,
+            "y": 2.6365175332527206,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP12",
+        "position": {
+            "x": 3.01519302615193,
+            "y": 1.1351874244256348,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP13",
+        "position": {
+            "x": 1.0537982565379824,
+            "y": 2.361789600967352,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP14",
+        "position": {
+            "x": 1.843586550435865,
+            "y": 3.0698911729141476,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    },
+    {
+        "location_id": "WP15",
+        "position": {
+            "x": 2.0998754669987543,
+            "y": 1.587908101571947,
+            "z": 0.15
+        },
+        "position_source": "demo_scaled_from_challenge_coordinates"
+    }
+]
