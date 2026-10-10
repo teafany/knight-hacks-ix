@@ -85,6 +85,10 @@ function Dashboard() {
   }, []);
 
   const metrics = data?.metrics;
+  const clusteredChange = lidar?.clustered_changes?.[0];
+  const proximity = lidar?.waypoint_proximity.find(
+    (row) => row.waypoint_id === selectedWaypoint,
+  );
   const history = lidar?.history.find(
     (row) => row.location_id === selectedWaypoint,
   );
@@ -381,7 +385,7 @@ function Dashboard() {
               <div className="waypoint-title">
                 <h2>{selectedWaypoint}</h2>
                 <span
-                  className={`badge severity ${history?.highest_severity.toLowerCase() ?? "none"}`}
+                  className={`badge severity ${history?.highest_severity?.toLowerCase() ?? "none"}`}
                 >
                   {history?.highest_severity ?? "—"}
                 </span>
@@ -390,6 +394,28 @@ function Dashboard() {
                 {data?.findings.find(
                   (row) => row.location_id === selectedWaypoint,
                 )?.location_name ?? "Synthetic facility waypoint"}
+              </p>
+              <div className="waypoint-stat">
+                <strong>
+                  {proximity?.distance_m != null
+                    ? `${proximity.distance_m.toFixed(3)} m`
+                    : "—"}
+                </strong>
+                <span>
+                  Distance to nearest
+                  <br />
+                  obstruction
+                </span>
+              </div>
+              <p>
+                <strong>Proximity status: </strong>
+                {proximity?.status === "NEAR_OBSTRUCTION"
+                  ? "Near obstruction"
+                  : proximity?.status === "CAUTION"
+                    ? "Caution"
+                    : proximity?.status === "CLEAR"
+                      ? "Clear"
+                      : "Unavailable"}
               </p>
               <div className="waypoint-stat">
                 <strong>{history?.anomaly_count ?? "—"}</strong>
@@ -443,25 +469,30 @@ function Dashboard() {
               <div className="eyebrow">POINT CLOUD COMPARISON</div>
               <h2>
                 <span className="dot red" />
-                New obstruction
+                ICP + DBSCAN Detection
               </h2>
               <p>
-                Separately detected in synthetic baseline and updated scans.
+                Geometric changes detected after ICP alignment and DBSCAN
+                clustering of synthetic scans.
               </p>
               <dl>
                 <div>
                   <dt>Change ID</dt>
-                  <dd>{lidar?.obstruction.id ?? "—"}</dd>
+                  <dd>{clusteredChange?.id ?? "—"}</dd>
                 </div>
                 <div>
                   <dt>Changed points</dt>
                   <dd>
-                    {lidar?.obstruction.point_count.toLocaleString() ?? "—"}
+                    {clusteredChange?.point_count?.toLocaleString() ?? "—"}
                   </dd>
                 </div>
                 <div>
+                  <dt>Clusters detected</dt>
+                  <dd>{lidar?.clustered_changes.length ?? "—"}</dd>
+                </div>
+                <div>
                   <dt>Review status</dt>
-                  <dd>{lidar?.obstruction.review_status ?? "—"}</dd>
+                  <dd>{clusteredChange?.review_status ?? "—"}</dd>
                 </div>
                 <div>
                   <dt>AI confidence</dt>
@@ -469,8 +500,10 @@ function Dashboard() {
                 </div>
               </dl>
               <p className="tiny-note">
-                This obstruction is separate from the 40 historical challenge
-                findings. No confidence score was supplied.
+                Synthetic ICP-aligned point-cloud comparison with DBSCAN
+                clustering. These geometric changes are separate from the 40
+                historical challenge findings. No AI confidence score was
+                supplied.
               </p>
             </article>
           </div>
@@ -732,7 +765,7 @@ function Dashboard() {
                 <div>
                   <strong>
                     {pct(
-                      metrics?.by_scenario.BASELINE[
+                      metrics?.by_scenario?.BASELINE?.[
                         key as "mission_completion_pct" | "action_success_pct"
                       ],
                     )}
@@ -740,7 +773,7 @@ function Dashboard() {
                   <span>→</span>
                   <strong className="improved">
                     {pct(
-                      metrics?.by_scenario.IMPROVED[
+                      metrics?.by_scenario?.IMPROVED?.[
                         key as "mission_completion_pct" | "action_success_pct"
                       ],
                     )}
