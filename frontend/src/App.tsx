@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Dashboard from "./Dashboard";
+import DatasetDashboard from "./DatasetDashboard";
 import robotImage from "./assets/spot-robot.svg";
 import "./App.css";
 
@@ -55,13 +56,16 @@ function ArrowIcon() {
 }
 
 export default function App() {
-  const [page, setPage] = useState<"landing" | "lidar">(() =>
-    window.location.hash === "#lidar" ? "lidar" : "landing",
-  );
+  const [page, setPage] = useState<"landing" | "lidar" | "dashboard">(() => {
+    if (window.location.hash === "#lidar") return "lidar";
+    if (window.location.hash === "#dashboard") return "dashboard";
+    return "landing";
+  });
 
   useEffect(() => {
     const onHashChange = () => {
       if (window.location.hash === "#lidar") setPage("lidar");
+      if (window.location.hash === "#dashboard") setPage("dashboard");
       if (window.location.hash === "#top") setPage("landing");
     };
 
@@ -85,10 +89,26 @@ export default function App() {
     }, 0);
   };
 
+  const openDashboardPage = () => {
+    setPage("dashboard");
+    window.history.pushState(null, "", "#dashboard");
+    window.setTimeout(() => {
+      document.getElementById("dataset-search")?.scrollIntoView();
+    }, 0);
+  };
+
   if (page === "lidar") {
     return (
       <main className="lidar-page" id="lidar">
         <Dashboard onHome={openLandingPage} />
+      </main>
+    );
+  }
+
+  if (page === "dashboard") {
+    return (
+      <main className="dataset-page" id="dashboard">
+        <DatasetDashboard onHome={openLandingPage} />
       </main>
     );
   }
@@ -111,6 +131,17 @@ export default function App() {
             reviewing spatial changes, and finding the events that matter.
           </p>
           <div className="actions">
+            <a
+              className="integration-button"
+              href="#dashboard"
+              onClick={(event) => {
+                event.preventDefault();
+                openDashboardPage();
+              }}
+            >
+              Integration dashboard
+              <ArrowIcon />
+            </a>
             <a
               href="#lidar"
               onClick={(event) => {
