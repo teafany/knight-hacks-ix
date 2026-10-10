@@ -1,0 +1,92 @@
+[
+  {
+    "waypoint_id": "WP01",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.049,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP02",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.302,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP03",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.8,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP04",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.277,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP05",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.125,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP06",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.939,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP07",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.434,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP08",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.019,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP09",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.296,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP10",
+    "nearest_obstruction": "change_001",
+    "distance_m": 1.897,
+    "status": "CLEAR"
+  },
+  {
+    "waypoint_id": "WP11",
+    "nearest_obstruction": "change_001",
+    "distance_m": 0.681,
+    "status": "CAUTION"
+  },
+  {
+    "waypoint_id": "WP12",
+    "nearest_obstruction": "change_001",
+    "distance_m": 0.422,
+    "status": "NEAR_OBSTRUCTION"
+  },
+  {
+    "waypoint_id": "WP13",
+    "nearest_obstruction": "change_001",
+    "distance_m": 0.946,
+    "status": "CAUTION"
+  },
+  {
+    "waypoint_id": "WP14",
+    "nearest_obstruction": "change_001",
+    "distance_m": 0.785,
+    "status": "CAUTION"
+  },
+  {
+    "waypoint_id": "WP15",
+    "nearest_obstruction": "change_001",
+    "distance_m": 0.0,
+    "status": "NEAR_OBSTRUCTION"
+  }
+]

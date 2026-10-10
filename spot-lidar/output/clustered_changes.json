@@ -1,0 +1,19 @@
+[
+    {
+        "id": "change_001",
+        "type": "geometric_change",
+        "position": {
+            "x": 2.3990094510233972,
+            "y": 1.898877491733741,
+            "z": 0.5662167297288198
+        },
+        "dimensions": {
+            "x": 0.8021425452406186,
+            "y": 0.8022994641270975,
+            "z": 0.8407191292037266
+        },
+        "point_count": 2198,
+        "source": "synthetic_icp_point_cloud_comparison",
+        "review_status": "unreviewed"
+    }
+]

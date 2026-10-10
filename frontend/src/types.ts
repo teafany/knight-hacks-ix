@@ -72,4 +72,21 @@ export type LidarData = {
   waypoints: Waypoint[];
   history: WaypointHistory[];
   obstruction: Obstruction;
+  clustered_changes: ClusteredChange[];
+  waypoint_proximity: WaypointProximity[];
+};
+export type ClusteredChange = {
+  id: string;
+  type: string;
+  source: string;
+  position: Position;
+  dimensions: Position;
+  point_count: number;
+  review_status: string;
+};
+export type WaypointProximity = {
+  waypoint_id: string;
+  nearest_obstruction: string | null;
+  distance_m: number | null;
+  status: "CLEAR" | "CAUTION" | "NEAR_OBSTRUCTION";
 };
