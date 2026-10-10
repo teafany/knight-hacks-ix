@@ -1,0 +1,2 @@
+# Optional dependency for scripts/stream_camera.py --source spot.
+bosdyn-client==5.2.0

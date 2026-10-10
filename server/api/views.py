@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import LimitOffsetPagination
 from django.db.models import Count, F, Q
+from drf_spectacular.utils import extend_schema
 
 from .models import Anomaly, Mission
 from .serializers import (
@@ -19,6 +20,7 @@ class HealthView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(responses=HealthSerializer, tags=['Health'])
     def get(self, request):
         serializer = HealthSerializer({'status': 'ok', 'service': 'server'})
         return Response(serializer.data)
@@ -32,6 +34,10 @@ class DashboardPagination(LimitOffsetPagination):
 class MissionListView(ListAPIView):
     serializer_class = MissionSerializer
     pagination_class = DashboardPagination
+
+    @extend_schema(parameters=[MissionQuerySerializer], tags=['Dashboard'])
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         query = MissionQuerySerializer(data=self.request.query_params)
@@ -47,6 +53,10 @@ class MissionListView(ListAPIView):
 class FindingListView(ListAPIView):
     serializer_class = FindingSerializer
     pagination_class = DashboardPagination
+
+    @extend_schema(parameters=[FindingQuerySerializer], tags=['Dashboard'])
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         # Treat filters as API values rather than HTML checkbox input. Otherwise
@@ -64,5 +74,6 @@ class FindingDetailView(RetrieveAPIView):
 
 
 class MetricsView(APIView):
+    @extend_schema(responses=MetricsSerializer, tags=['Dashboard'])
     def get(self, request):
         return Response(MetricsSerializer(dashboard_metrics()).data)
