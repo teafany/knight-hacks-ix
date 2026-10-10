@@ -33,6 +33,21 @@ allow-list automatically. `registry.json` records which models remain untrained.
 The table above records the initial gauge/corrosion pair; `registry.json` is
 authoritative for later imports. Dial-meter data requires the provider's agreement.
 
+Acoustic training lives in local `acoustic-training/`. After its full-run
+held-out-machine evaluation, the export/import flow adds only the trained model,
+metadata, checksums, registry row and Git allow-rule. It recognizes pump audio
+normal/anomalous reference patterns, not specific fault types or hazard severity.
+The acoustic independent-test flag is limited to held-out machine ID 06, not a
+new recording session/site. Input frontend is checkpoint-versioned and required
+for compatible loading; use the local acoustic inference code rather than
+feeding raw audio directly to ResNet18. No runtime downloads are needed.
+
+The imported acoustic run `acoustic_resnet18_20261010_224835` is retained as an
+experimental result, not a usable inspection model: held-out machine 06 balanced
+accuracy is 50.8%, with 1,019 false positives among 1,036 normal clips. Full test
+metrics remain in its original metadata. Publication records the experiment;
+it does not assert that the model is reliable or suitable for deployment.
+
 ## Verify and Publish Only Models
 
 From the project root:

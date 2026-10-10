@@ -52,10 +52,24 @@
       ],
       "independent_test": false,
       "scope": "Compatible single induction-motor thermogram; no radiometric temperature or severity"
+    },
+    {
+      "id": "acoustic-acoustic_resnet18_20261010_224835",
+      "quality_status": "experimental_not_suitable_for_deployment",
+      "path": "acoustic/pump/acoustic_resnet18_20261010_224835/model.pt",
+      "metadata": "acoustic/pump/acoustic_resnet18_20261010_224835/metadata.json",
+      "sha256": "03ff18b22856523112cf914e562008d8bef98a4a4e921fa3f4cfeac7ce478b86",
+      "size_bytes": 44779723,
+      "architecture": "resnet18",
+      "classes": [
+        "normal",
+        "anomalous"
+      ],
+      "independent_test": true,
+      "scope": "Pump audio at 16 kHz; held-out machine 06 test, not independent recording session/plant; no fault subtype or severity"
     }
   ],
   "not_yet_trained": [
-    "acoustic",
     "multi-dial electricity meter"
   ]
 }

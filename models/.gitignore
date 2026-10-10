@@ -10,3 +10,4 @@ __pycache__/
 *.pyc
 .DS_Store
 !thermal/induction-motor/thermal_resnet18_20261010_220345/model.pt
+!acoustic/pump/acoustic_resnet18_20261010_224835/model.pt

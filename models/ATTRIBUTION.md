@@ -60,3 +60,23 @@ eleven experiment condition patterns, not radiometric temperature or severity.
 The 40 region annotations are not independent fault masks or test images.
 Architecture/initialization uses the same torchvision ResNet18/ImageNet upstream
 sources and notices listed above. No commercial-use clearance is asserted.
+
+## Acoustic Classifier (After Import)
+
+Check `registry.json` for actual checkpoint availability. Training source:
+Harsh Purohit, Ryo Tanabe, Kenji Ichige, Takashi Endo, Yuki Nikaido, Kaori Suefusa
+and Yohei Kawaguchi (Hitachi, Ltd.), MIMII Dataset, public 1.0, 2019,
+DOI 10.5281/zenodo.3384388, https://zenodo.org/records/3384388 . Paper:
+https://arxiv.org/abs/1909.09347 . Dataset CC BY-SA 4.0:
+https://creativecommons.org/licenses/by-sa/4.0/ . Retain attribution and
+ShareAlike obligations for covered adaptations; no blanket trained-model license
+or commercial-use clearance is asserted.
+
+Changes: 6 dB pump subset only, channel zero retained as mono WAV; custom
+supervised machine-ID splits (train 00/02, validation 04, test 06). This is not
+the original normal-only unsupervised MIMII benchmark. An independent-test flag
+in the acoustic registry specifically means a held-out machine-ID test, not
+independent background-noise/session/site collection. See the checkpoint-bound
+test report in metadata for actual performance; no defect subtype or severity
+is inferred. Initialization is the same official torchvision/ImageNet ResNet18
+listed above, not audio-pretrained weights. No plant-wide validation is asserted.
