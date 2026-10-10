@@ -26,8 +26,12 @@ be one manually supplied yoke-suspension crop. Neither model establishes safety.
 `registry.json` lists the published checkpoints and hashes. The `.gitignore`
 allows only these selected binary files; other checkpoint binaries remain ignored.
 For a new final model, import it, add an explicit allow-rule and registry entry,
-then verify before committing. Thermal and acoustic models are not yet trained
-or present. Dial-meter training data still requires the provider's agreement.
+then verify before committing. Thermal training lives in the local
+`thermal-training/` component.
+Its importer adds a verified full-run checkpoint to this registry and the Git
+allow-list automatically. `registry.json` records which models remain untrained.
+The table above records the initial gauge/corrosion pair; `registry.json` is
+authoritative for later imports. Dial-meter data requires the provider's agreement.
 
 ## Verify and Publish Only Models
 

@@ -40,3 +40,23 @@ Torchvision code BSD-3-Clause notice is retained in `licenses/`; this is not a
 blanket license for underlying ImageNet data or for these fine-tuned weights.
 https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.resnet18.html .
 No indoor-plant, severity or defect-localization validation is asserted.
+
+## Thermal Classifier (After Import)
+
+Thermal training is prepared locally; check `registry.json` to determine whether
+a final checkpoint has actually been imported. Dataset: Mohamad Najafi, Yasser
+Baleghi and Seyyed Mehdi Mirimani, *Thermal image of equipment (Induction Motor) +
+40 Ground Truths added*, v3, DOI 10.17632/m4sbt8hbvk.3,
+https://data.mendeley.com/datasets/m4sbt8hbvk/3 . License: CC BY 4.0,
+https://creativecommons.org/licenses/by/4.0/ . Related paper: Najafi, Baleghi,
+Gholamian and Mirimani, *Fault Diagnosis of Electrical Equipment through Thermal
+Imaging and Interpretable Machine Learning Applied on a Newly-introduced Dataset*,
+ICSPIS 2020, DOI 10.1109/ICSPIS51611.2020.9349599.
+
+Changes: one exact duplicate removed; blocked within-condition train/validation
+split with three-frame gaps. Validation shares the laboratory image sequences;
+no independent motor/camera/session test is available. The classifier recognizes
+eleven experiment condition patterns, not radiometric temperature or severity.
+The 40 region annotations are not independent fault masks or test images.
+Architecture/initialization uses the same torchvision ResNet18/ImageNet upstream
+sources and notices listed above. No commercial-use clearance is asserted.

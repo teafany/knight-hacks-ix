@@ -9,3 +9,4 @@
 __pycache__/
 *.pyc
 .DS_Store
+!thermal/induction-motor/thermal_resnet18_20261010_220345/model.pt

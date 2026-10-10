@@ -8,7 +8,11 @@
       "sha256": "c2406a1a1f5cd838b60bee78dd902949921ec5bf70f8a7b5e63dc16c4b92ca0b",
       "size_bytes": 5476826,
       "architecture": "YOLO11n",
-      "classes": ["Center", "Gauge", "Needle"],
+      "classes": [
+        "Center",
+        "Gauge",
+        "Needle"
+      ],
       "independent_test": false,
       "scope": "Gauge, center and whole-pointer detection; numeric reading needs separate calibration"
     },
@@ -19,10 +23,39 @@
       "sha256": "f215d6b0e6d0b5ae6f0fb346eb5c91df32a4b29d249333ce829134ceeef0b19d",
       "size_bytes": 44779339,
       "architecture": "resnet18",
-      "classes": ["normal", "corrosion"],
+      "classes": [
+        "normal",
+        "corrosion"
+      ],
       "independent_test": false,
       "scope": "Single manually cropped yoke-suspension equipment; no localization or severity"
+    },
+    {
+      "id": "thermal-thermal_resnet18_20261010_220345",
+      "path": "thermal/induction-motor/thermal_resnet18_20261010_220345/model.pt",
+      "metadata": "thermal/induction-motor/thermal_resnet18_20261010_220345/metadata.json",
+      "sha256": "302fe71c13a915bc838314d0682732ab6da7bcb28040582abb5432bd88af16bd",
+      "size_bytes": 44798603,
+      "architecture": "resnet18",
+      "classes": [
+        "healthy_no_load",
+        "cooling_fan_failure",
+        "stuck_rotor",
+        "stator_A_10",
+        "stator_A_30",
+        "stator_A_50",
+        "stator_AC_10",
+        "stator_AC_30",
+        "stator_AB_50",
+        "stator_ABC_10",
+        "stator_ABC_30"
+      ],
+      "independent_test": false,
+      "scope": "Compatible single induction-motor thermogram; no radiometric temperature or severity"
     }
   ],
-  "not_yet_trained": ["thermal", "acoustic", "multi-dial electricity meter"]
+  "not_yet_trained": [
+    "acoustic",
+    "multi-dial electricity meter"
+  ]
 }
