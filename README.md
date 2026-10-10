@@ -40,6 +40,7 @@ npm run dev
 | --- | --- |
 | React dashboard | http://localhost:5173 |
 | Django API | http://127.0.0.1:8000/api/health |
+| Swagger API docs | http://127.0.0.1:8000/api/docs |
 
 **Ctrl+C stops both servers.** The launcher also stops the other server if one
 fails. On macOS/Linux, frontend and backend changes reload automatically.
@@ -120,3 +121,11 @@ different source convention is confirmed. Dashboard timestamps display UTC.
 
 See [LiDAR integration notes](frontend/INTEGRATION.md) for asset formats,
 coordinate conventions, and the prototype's limitations.
+
+## Camera and Model Inference
+
+Stateless frame/audio endpoints are available under `/api/inference/` for the
+registered gauge, corrosion, thermal, and experimental acoustic checkpoints.
+Install `server/requirements-inference.txt` for model execution. Webcam, browser,
+and Spot SDK camera clients send independent frame requests without server-side
+camera sessions. See [inference setup, API contracts, and camera commands](docs/inference-api.md).

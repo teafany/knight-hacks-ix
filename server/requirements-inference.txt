@@ -1,0 +1,8 @@
+# CPU/macOS runtime. Keep provider-specific ROCm/CUDA torch builds on GPU hosts.
+-r requirements.txt
+torch==2.14.1
+torchvision==0.29.1
+ultralytics==8.3.221
+numpy==2.3.5
+opencv-python==4.13.0.92
+requests==2.32.5
