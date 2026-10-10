@@ -1,0 +1,45 @@
+{
+  "task": "insplad_corrosion_classifier",
+  "architecture": "resnet18",
+  "classes": [
+    "normal",
+    "corrosion"
+  ],
+  "asset_category": "yoke-suspension",
+  "preprocess": "letterbox224_imagenet_v1",
+  "epoch": 11,
+  "run_name": "corrosion_20261010_212044",
+  "run_kind": "full",
+  "seed": 42,
+  "pretrained_sha256": "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec",
+  "dataset_manifest_sha256": "68feab572c4953d4c9e3fed1705caf60ec9b4eef30e536bf3ab75b0fc82043d4",
+  "validation": {
+    "images": 5278,
+    "accuracy": 0.9998105342932929,
+    "balanced_accuracy": 0.9999049610340239,
+    "recall_by_class": [
+      0.9998099220680479,
+      1.0
+    ],
+    "precision_by_class": [
+      1.0,
+      0.9444444444444444
+    ],
+    "confusion_matrix": [
+      [
+        5260,
+        1
+      ],
+      [
+        0,
+        17
+      ]
+    ],
+    "matrix_axes": "row=true, column=predicted"
+  },
+  "torch_version": "2.13.0+rocm10.0.0",
+  "rocm_version": "7.15.26333",
+  "automatic_remote_sync": false,
+  "indoor_plant_validated": false,
+  "license_notes": "InsPLAD CC BY-NC 3.0; torchvision BSD-3-Clause; pretrained ImageNet data terms also apply"
+}

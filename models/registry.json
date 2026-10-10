@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "models": [
+    {
+      "id": "gauge-detector-yolo11n",
+      "path": "gauge/yolo11n-best.pt",
+      "metadata": "gauge/metadata.json",
+      "sha256": "c2406a1a1f5cd838b60bee78dd902949921ec5bf70f8a7b5e63dc16c4b92ca0b",
+      "size_bytes": 5476826,
+      "architecture": "YOLO11n",
+      "classes": [
+        "Center",
+        "Gauge",
+        "Needle"
+      ],
+      "independent_test": false,
+      "scope": "Gauge, center and whole-pointer detection; numeric reading needs separate calibration"
+    },
+    {
+      "id": "corrosion-yoke-resnet18",
+      "path": "corrosion/yoke-suspension/corrosion_20261010_212044/model.pt",
+      "metadata": "corrosion/yoke-suspension/corrosion_20261010_212044/metadata.json",
+      "sha256": "f215d6b0e6d0b5ae6f0fb346eb5c91df32a4b29d249333ce829134ceeef0b19d",
+      "size_bytes": 44779339,
+      "architecture": "resnet18",
+      "classes": [
+        "normal",
+        "corrosion"
+      ],
+      "independent_test": false,
+      "scope": "Single manually cropped yoke-suspension equipment; no localization or severity"
+    },
+    {
+      "id": "thermal-thermal_resnet18_20261010_220345",
+      "path": "thermal/induction-motor/thermal_resnet18_20261010_220345/model.pt",
+      "metadata": "thermal/induction-motor/thermal_resnet18_20261010_220345/metadata.json",
+      "sha256": "302fe71c13a915bc838314d0682732ab6da7bcb28040582abb5432bd88af16bd",
+      "size_bytes": 44798603,
+      "architecture": "resnet18",
+      "classes": [
+        "healthy_no_load",
+        "cooling_fan_failure",
+        "stuck_rotor",
+        "stator_A_10",
+        "stator_A_30",
+        "stator_A_50",
+        "stator_AC_10",
+        "stator_AC_30",
+        "stator_AB_50",
+        "stator_ABC_10",
+        "stator_ABC_30"
+      ],
+      "independent_test": false,
+      "scope": "Compatible single induction-motor thermogram; no radiometric temperature or severity"
+    },
+    {
+      "id": "acoustic-acoustic_resnet18_20261010_224835",
+      "quality_status": "experimental_not_suitable_for_deployment",
+      "path": "acoustic/pump/acoustic_resnet18_20261010_224835/model.pt",
+      "metadata": "acoustic/pump/acoustic_resnet18_20261010_224835/metadata.json",
+      "sha256": "03ff18b22856523112cf914e562008d8bef98a4a4e921fa3f4cfeac7ce478b86",
+      "size_bytes": 44779723,
+      "architecture": "resnet18",
+      "classes": [
+        "normal",
+        "anomalous"
+      ],
+      "independent_test": true,
+      "scope": "Pump audio at 16 kHz; held-out machine 06 test, not independent recording session/plant; no fault subtype or severity"
+    }
+  ],
+  "not_yet_trained": [
+    "multi-dial electricity meter"
+  ]
+}
