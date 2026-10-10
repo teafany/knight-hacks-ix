@@ -34,6 +34,7 @@ or present. Dial-meter training data still requires the provider's agreement.
 From the project root:
 
 ```bash
+git switch feat/ai-models
 python3 models/verify_publish.py
 git add -- models
 git diff --cached --stat
@@ -44,7 +45,7 @@ Check that the staged list contains only `models/` before continuing. Do not use
 
 ```bash
 git commit --only -m "Add trained gauge and corrosion models" -- models
-git push origin main
+git push -u origin feat/ai-models
 ```
 
 The path-scoped commit keeps unrelated staged changes out of this commit. A push
