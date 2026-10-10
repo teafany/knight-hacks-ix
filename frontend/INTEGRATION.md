@@ -4,28 +4,13 @@ This prototype runs on `tiff/frontend-backend-integration`. It displays syntheti
 challenge history and a simulated LiDAR room. It never represents real robot
 telemetry. Demo mode is the default and does not require Django.
 
-## Run
+## API integration
 
-From the repository root, prepare the local backend:
+All setup, startup, testing, build, and snapshot-export commands are in the
+[root README](../README.md).
 
-```sh
-.venv/bin/python -m pip install -r server/requirements.txt
-.venv/bin/python server/manage.py migrate
-.venv/bin/python server/manage.py import_challenge_data
-.venv/bin/python server/manage.py runserver 127.0.0.1:8000
-```
-
-Create the virtual environment with `python3 -m venv .venv` first if necessary.
-In another terminal:
-
-```sh
-cd frontend
-npm ci
-npm run dev
-```
-
-Open http://localhost:5173. Choose **Demo data** for the bundled snapshot or
-**Django API** to fetch `/api/health`, `/api/metrics`, `/api/missions`, and
+Choose **Demo data** for the bundled snapshot or **Django API** to fetch
+`/api/health`, `/api/metrics`, `/api/missions`, and
 `/api/findings`. Vite proxies `/api` to the local Django server on port 8000.
 Failed API requests clear previous dashboard data and show an error; the app
 does not silently fall back to the snapshot. Refresh retries the selected source.
@@ -61,18 +46,10 @@ The exports are static frontend assets for this dummy dashboard. The agreed
 `GET /api/scans/{scan_id}` schema remains unchanged and is not yet implemented.
 Replace all four exports together when a revised model/coordinate mapping arrives.
 
-## Snapshot and checks
+## Data conventions
 
 `public/demo/dashboard.json` is exported from the imported dataset through the
-Django serializers, not hand-written metrics. To regenerate from the repository
-root:
-
-```sh
-.venv/bin/python frontend/scripts/export_demo.py
-.venv/bin/python server/manage.py test api
-cd frontend
-npm run build
-```
+Django serializers, not hand-written metrics. See the root README to regenerate it.
 
 The source timestamps have no timezone. The importer assumes UTC unless
 `--source-timezone` is specified; dashboard timestamps display UTC consistently.
