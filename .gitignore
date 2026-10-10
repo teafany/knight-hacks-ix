@@ -1,0 +1,31 @@
+# Local Python environments and generated files
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Local persistence, secrets, and runtime output
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.log
+server/staticfiles/
+
+# Frontend build output
+node_modules/
+dist/
+
+# OS metadata
+.DS_Store
