@@ -72,6 +72,8 @@ chmod 0755 /usr/local/libexec/knight-hacks-certbot-reload
     --cert-name "$CERT_NAME" --required-profile shortlived \
     --deploy-hook /usr/local/libexec/knight-hacks-certbot-reload
 
+# Retain frontend hosting when renewing/re-running HTTPS setup later.
+if ! grep -q 'root /var/www/knight-hacks/current;' "$SITE"; then
 cat > "$SITE" <<EOF
 server {
     listen 80;
@@ -113,6 +115,7 @@ server {
     }
 }
 EOF
+fi
 nginx -t
 systemctl reload nginx
 

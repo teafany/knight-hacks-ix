@@ -85,13 +85,14 @@ backend changes, install any changed requirements, and rerun the bootstrap.
 If the API works on the server but not externally, permit inbound TCP port 80
 in the provider's firewall.
 
-## Automatic backend deployment from GitHub
+## Automatic app deployment from GitHub
 
 `.github/workflows/deploy-backend.yml` tests pull requests to `main`. Pushes to
-`main` that change backend, model, challenge data, deployment, or workflow files
+`main` that change frontend, backend, model, challenge data, deployment, or workflow files
 run the same tests and then deploy the tested commit. It can also be run manually
-from the Actions tab on `main`. Frontend files are not deployment triggers.
-Tests use PostgreSQL 17, Python 3.12, and all four CPU inference checkpoints.
+from the Actions tab on `main`. Deployment requires both the React production
+build and backend tests to pass. Tests use PostgreSQL 17, Python 3.12, and all
+four CPU inference checkpoints; frontend builds use Node 22 and the npm lockfile.
 
 The repository needs these Actions secrets:
 
@@ -115,17 +116,35 @@ The server must retain its existing read access to the GitHub repository.
 The deployment scripts are installed root-owned in `/usr/local/libexec`; rerun
 setup after changing `redeploy.sh` or the SSH entrypoint setup.
 
+Enable the frontend once after configuring HTTPS and Actions:
+
+```sh
+sudo bash deploy/enable-frontend.sh 64.177.51.140
+```
+
+This installs Ubuntu's Node/npm packages, builds the active release's frontend,
+and serves it at `https://64.177.51.140/`. API and Swagger requests stay under
+`/api/`, and Swagger assets stay under `/static/`. The Vite build sets
+`VITE_API_BASE_URL=/api`, so dashboard API mode uses the same HTTPS origin without
+needing CORS changes. The default Demo data mode remains selectable.
+Nginx serves only built public frontend files under `/var/www/knight-hacks/current`;
+the backend releases and secrets remain in the application owner's home directory.
+This command also updates the installed deployment helper and preserves ACME
+validation, HTTPS redirects, and certificate renewal.
+
 Each deployment fetches `main`, skips superseded commits, extracts the tested
 commit into `~/.local/share/knight-hacks/releases/<SHA>`, creates an independent
-virtual environment, verifies checkpoints, collects assets, and runs the API
-and inference tests. It then migrates PostgreSQL, switches the `current` symlink,
-restarts Gunicorn, and checks the database-backed metrics route. CI also checks
-the public HTTPS health and metrics endpoints. Deployments are serialized both
+virtual environment, verifies checkpoints, collects assets, builds the frontend
+with `npm ci` and `npm run build`, and runs the API and inference tests. It then
+migrates PostgreSQL, switches the backend and frontend `current` symlinks,
+restarts Gunicorn, and checks the database-backed metrics route and frontend HTML.
+CI also checks public HTTPS health, metrics, frontend HTML, and its JavaScript
+bundle. Deployments are serialized both
 in Actions and on the server. Existing source checkout files, secrets, Nginx,
 certificate renewal, and database records are preserved.
 
-If restart or health checks fail, the service switches back to the previous code
-release. Database migrations are not automatically reversed; keep migrations
+If restart or health checks fail, both frontend and backend switch back to their
+previous code releases. Database migrations are not automatically reversed; keep migrations
 compatible with the previous release and take backups before destructive schema
 changes. Release directories are retained for recovery; remove older inactive
 ones manually when disk space requires it.
@@ -134,6 +153,7 @@ To inspect the active release:
 
 ```sh
 readlink /home/admin/.local/share/knight-hacks/current
+readlink /var/www/knight-hacks/current
 sudo journalctl -u knight-hacks-api -n 100 --no-pager
 ```
 
