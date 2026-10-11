@@ -1,4 +1,12 @@
 import {
+  CheckCircle2,
+  FileSearch,
+  PanelLeft,
+  Search,
+  TableProperties,
+  Trash2,
+} from "lucide-react";
+import {
   useEffect,
   useMemo,
   useRef,
@@ -14,9 +22,17 @@ import missionsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/m
 import readingsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/readings.csv?raw";
 import replayNdjson from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/replay.ndjson?raw";
 import floorPlanUrl from "../../SPOT_KnightHacks_Challenge_Kit Part One/04_ASSETS/fictional_floor_plan.png";
+import { apiURL } from "./apiConfig";
 import "./DatasetDashboard.css";
 
-type DataValue = string | number | boolean | null | undefined | Record<string, unknown>;
+type DataValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Record<string, unknown>
+  | unknown[];
 type CsvRow = Record<string, DataValue>;
 
 type DatasetSource =
@@ -77,7 +93,22 @@ type PaginatedApiResponse<T> = {
   results: T[];
 };
 
-const apiBaseUrl = "https://64.177.51.140/api";
+type PanelMode = "search" | "summary";
+
+type SummaryRelatedGroup = {
+  label: string;
+  endpoint: string;
+  records: CsvRow[];
+};
+
+type SummaryState = {
+  key: string;
+  status: "loading" | "ready" | "error";
+  primary?: CsvRow;
+  groups: SummaryRelatedGroup[];
+  modelSummary?: CsvRow;
+  error?: string;
+};
 
 const datasets: { source: DatasetSource; csv: string }[] = [
   { source: "Actions", csv: actionsCsv },
@@ -337,7 +368,9 @@ async function fetchPaginated<T extends CsvRow>(
   path: string,
   signal: AbortSignal,
 ) {
-  let url: string | null = `${apiBaseUrl}${path}?limit=500`;
+  let url: string | null = apiURL(
+    `${path}${path.includes("?") ? "&" : "?"}limit=500`,
+  );
   const rows: T[] = [];
   while (url) {
     const response = await fetch(url, { signal });
@@ -349,6 +382,146 @@ async function fetchPaginated<T extends CsvRow>(
   return rows;
 }
 
+async function fetchRecord<T extends CsvRow>(
+  path: string,
+  signal: AbortSignal,
+) {
+  const response = await fetch(apiURL(path), { signal });
+  if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+  return (await response.json()) as T;
+}
+
+function fieldValue(record: DatasetRecord | undefined, key: string) {
+  return textValue(record?.fields[key]);
+}
+
+function filteredSearchLabel(
+  selectedSource: DatasetSource | "All",
+  selectedSubtype: string,
+  selectedLocationFilter: string,
+  searchQuery: string,
+) {
+  const parts = [
+    selectedSource === "All" ? "all data" : selectedSource,
+    selectedSubtype === "All" ? "" : selectedSubtype,
+    selectedLocationFilter === "All" ? "" : selectedLocationFilter,
+    searchQuery.trim() ? `"${searchQuery.trim()}"` : "",
+  ].filter(Boolean);
+  return parts.join(" / ");
+}
+
+function relatedSummaryRequests(record: DatasetRecord) {
+  const id = encodeURIComponent(record.id);
+  const missionId = encodeURIComponent(fieldValue(record, "mission_id"));
+  const actionId = encodeURIComponent(fieldValue(record, "action_id"));
+  const assetId = encodeURIComponent(fieldValue(record, "asset_id"));
+  const locationId = encodeURIComponent(record.locationId);
+  const mlDetectionId = encodeURIComponent(fieldValue(record, "ml_detection_id"));
+
+  if (record.source === "Actions") {
+    return [
+      { label: "Readings from action", endpoint: `records/readings?action_id=${id}` },
+      { label: "Findings from action", endpoint: `records/anomalies?action_id=${id}` },
+      { label: "Replay events", endpoint: `records/replay-events?action_id=${id}` },
+      { label: "LiDAR scans", endpoint: `records/lidar-scans?action_id=${id}` },
+      { label: "ML detections", endpoint: `records/ml-detections?action_id=${id}` },
+    ];
+  }
+  if (record.source === "Anomalies") {
+    return [
+      actionId && { label: "Action readings", endpoint: `records/readings?action_id=${actionId}` },
+      actionId && { label: "Replay events", endpoint: `records/replay-events?action_id=${actionId}` },
+      assetId && { label: "Asset detections", endpoint: `records/ml-detections?asset_id=${assetId}` },
+      mlDetectionId && { label: "ML detections", endpoint: "records/ml-detections" },
+    ].filter(Boolean) as { label: string; endpoint: string }[];
+  }
+  if (record.source === "Assets") {
+    return [
+      { label: "Asset actions", endpoint: `records/actions?asset_id=${id}` },
+      { label: "Asset readings", endpoint: `records/readings?asset_id=${id}` },
+      { label: "Asset findings", endpoint: `records/anomalies?asset_id=${id}` },
+      { label: "ML detections", endpoint: `records/ml-detections?asset_id=${id}` },
+    ];
+  }
+  if (record.source === "Locations") {
+    return [
+      { label: "Assets in area", endpoint: `records/assets?location_id=${locationId}` },
+      { label: "Actions in area", endpoint: `records/actions?location_id=${locationId}` },
+      { label: "LiDAR scans", endpoint: `records/lidar-scans?location_id=${locationId}` },
+    ];
+  }
+  if (record.source === "Missions") {
+    return [
+      { label: "Mission actions", endpoint: `records/actions?mission_id=${id}` },
+      { label: "Mission readings", endpoint: `records/readings?mission_id=${id}` },
+      { label: "Mission findings", endpoint: `records/anomalies?mission_id=${id}` },
+      { label: "Mission replays", endpoint: `records/replays?mission_id=${id}` },
+      { label: "Replay events", endpoint: `records/replay-events?mission_id=${id}` },
+      { label: "LiDAR scans", endpoint: `records/lidar-scans?mission_id=${id}` },
+      { label: "ML detections", endpoint: `records/ml-detections?mission_id=${id}` },
+    ];
+  }
+  return [
+    actionId && { label: "Sibling action readings", endpoint: `records/readings?action_id=${actionId}` },
+    missionId && { label: "Mission findings", endpoint: `records/anomalies?mission_id=${missionId}` },
+    actionId && { label: "Replay events", endpoint: `records/replay-events?action_id=${actionId}` },
+    assetId && { label: "Asset detections", endpoint: `records/ml-detections?asset_id=${assetId}` },
+  ].filter(Boolean) as { label: string; endpoint: string }[];
+}
+
+function summaryHighlights(
+  record: DatasetRecord,
+  groups: SummaryRelatedGroup[],
+  searchLabel: string,
+) {
+  const relationshipCount = groups.reduce(
+    (total, group) => total + group.records.length,
+    0,
+  );
+  const status =
+    fieldValue(record, "status") ||
+    fieldValue(record, "mission_status") ||
+    fieldValue(record, "quality") ||
+    fieldValue(record, "severity") ||
+    fieldValue(record, "criticality") ||
+    fieldValue(record, "zone_type");
+  return [
+    { label: "Search context", value: searchLabel || "all data" },
+    { label: "Selected type", value: `${record.source} / ${record.subtype}` },
+    { label: "Primary state", value: status || "Not recorded" },
+    { label: "Related records", value: String(relationshipCount) },
+  ];
+}
+
+function previewTitle(row: CsvRow) {
+  return (
+    textValue(row.action_id) ||
+    textValue(row.anomaly_id) ||
+    textValue(row.asset_name) ||
+    textValue(row.asset_id) ||
+    textValue(row.location_name) ||
+    textValue(row.location_id) ||
+    textValue(row.mission_name) ||
+    textValue(row.mission_id) ||
+    textValue(row.reading_id) ||
+    textValue(row.event_id) ||
+    textValue(row.name) ||
+    textValue(row.id) ||
+    "Record"
+  );
+}
+
+function previewMeta(row: CsvRow) {
+  return [
+    textValue(row.status) || textValue(row.review_status) || textValue(row.quality),
+    textValue(row.location_id),
+    textValue(row.asset_id),
+    textValue(row.mission_id),
+  ]
+    .filter(Boolean)
+    .join(" / ");
+}
+
 function DatasetDashboard({ onHome }: DatasetDashboardProps) {
   const [activeWaypoint, setActiveWaypoint] = useState("WP05");
   const [selectedWaypoints, setSelectedWaypoints] = useState<string[]>([]);
@@ -357,6 +530,8 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
   const [selectedSubtype, setSelectedSubtype] = useState("All");
   const [selectedLocationFilter, setSelectedLocationFilter] = useState("All");
   const [selectedRecordIds, setSelectedRecordIds] = useState<string[]>([]);
+  const [summaryRecordId, setSummaryRecordId] = useState("");
+  const [panelMode, setPanelMode] = useState<PanelMode>("search");
   const fallbackMissionPaths = useMemo(() => buildMissionPaths(), []);
   const [selectedMissionId, setSelectedMissionId] = useState(
     () => fallbackMissionPaths[0]?.missionId ?? "",
@@ -372,6 +547,7 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
   const [apiStatus, setApiStatus] = useState<"loading" | "ready" | "fallback">(
     "loading",
   );
+  const [summaryState, setSummaryState] = useState<SummaryState | null>(null);
   const [searchPanelHeight, setSearchPanelHeight] = useState(330);
   const searchPanelRef = useRef<HTMLElement>(null);
 
@@ -452,36 +628,19 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
     return () => abortController.abort();
   }, [fallbackLocations, fallbackMissionPaths, fallbackRecords]);
 
-  const hasSelectedRecordAtLocation = (
-    locationId: string,
-    selectedKeys: string[],
-  ) =>
-    selectedKeys.some((recordId) => {
-      const record = records.find((item) => recordKey(item) === recordId);
-      return record?.locationId === locationId;
-    });
-
   const toggleWaypoint = (locationId: string) => {
-    const isSelected = selectedWaypoints.includes(locationId);
     setActiveWaypoint(locationId);
     setSelectedWaypoints((current) =>
       current.includes(locationId)
         ? current.filter((id) => id !== locationId)
         : [...current, locationId],
     );
-    if (isSelected) {
-      setSelectedRecordIds((current) =>
-        current.filter((recordId) => {
-          const record = records.find((item) => recordKey(item) === recordId);
-          return record?.locationId !== locationId;
-        }),
-      );
-    }
   };
 
   const clearSelections = () => {
     setSelectedWaypoints([]);
     setSelectedRecordIds([]);
+    setSummaryRecordId("");
   };
 
   const toggleRecord = (record: DatasetRecord) => {
@@ -497,22 +656,23 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
       : [...selectedRecordIds, key];
 
     setSelectedRecordIds(nextRecordIds);
-    if (!record.locationId) return;
+    if (record.locationId) setActiveWaypoint(record.locationId);
+  };
 
-    setActiveWaypoint(record.locationId);
-    setSelectedWaypoints((current) => {
-      if (!isSelected && !current.includes(record.locationId)) {
-        return [...current, record.locationId];
-      }
-      if (
-        isSelected &&
-        current.includes(record.locationId) &&
-        !hasSelectedRecordAtLocation(record.locationId, nextRecordIds)
-      ) {
-        return current.filter((locationId) => locationId !== record.locationId);
-      }
-      return current;
-    });
+  const deleteRailRecord = (record: DatasetRecord) => {
+    const key = recordKey(record);
+    setSelectedRecordIds((current) => current.filter((id) => id !== key));
+    if (record.source === "Locations" && record.locationId) {
+      setSelectedWaypoints((current) =>
+        current.filter((id) => id !== record.locationId),
+      );
+    }
+    setSummaryRecordId((current) => (current === key ? "" : current));
+  };
+
+  const selectSummaryRecord = (record: DatasetRecord) => {
+    setSummaryRecordId(recordKey(record));
+    if (record.locationId) setActiveWaypoint(record.locationId);
   };
 
   const focusMap = () => {
@@ -592,6 +752,23 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
     .map((recordId) => records.find((record) => recordKey(record) === recordId))
     .filter((record) => record?.source !== "Locations")
     .filter((record): record is DatasetRecord => Boolean(record));
+  const selectedLocationRecords = selectedWaypoints
+    .map((locationId) =>
+      records.find(
+        (record) =>
+          record.source === "Locations" && record.locationId === locationId,
+      ),
+    )
+    .filter((record): record is DatasetRecord => Boolean(record));
+  const selectedRailRecords = [...selectedLocationRecords, ...selectedRecords];
+  const summaryRecord =
+    selectedRailRecords.find((record) => recordKey(record) === summaryRecordId) ??
+    selectedRecords.at(-1) ??
+    selectedLocationRecords.at(-1) ??
+    records.find(
+      (record) =>
+        record.source === "Locations" && record.locationId === activeWaypoint,
+    );
   const filteredRecords = records
     .filter((record) => selectedSource === "All" || record.source === selectedSource)
     .filter(
@@ -608,6 +785,86 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
         searchQuery.trim() === "" ||
         record.searchText.includes(searchQuery.trim().toLowerCase()),
     );
+  const summarySearchLabel = filteredSearchLabel(
+    selectedSource,
+    selectedSubtype,
+    selectedLocationFilter,
+    searchQuery,
+  );
+  const summaryKey = summaryRecord ? recordKey(summaryRecord) : "";
+  const summaryApiPath = summaryRecord
+    ? `records/${recordEndpoints[summaryRecord.source]}/${encodeURIComponent(summaryRecord.id)}`
+    : "";
+  const summaryHighlightsList = summaryRecord
+    ? summaryHighlights(
+        summaryRecord,
+        summaryState?.key === summaryKey ? summaryState.groups : [],
+        summarySearchLabel,
+      )
+    : [];
+
+  useEffect(() => {
+    if (panelMode !== "summary" || !summaryRecord) return;
+    const abortController = new AbortController();
+    const recordForSummary = summaryRecord;
+    const currentKey = recordKey(recordForSummary);
+    const currentApiPath = `records/${recordEndpoints[recordForSummary.source]}/${encodeURIComponent(recordForSummary.id)}`;
+
+    async function loadSummary() {
+      try {
+        setSummaryState({
+          key: currentKey,
+          status: "loading",
+          groups: [],
+        });
+        const requests = relatedSummaryRequests(recordForSummary);
+        const [primary, groups, modelSummary] = await Promise.all([
+          fetchRecord<CsvRow>(currentApiPath, abortController.signal),
+          Promise.all(
+            requests.map(async (request) => ({
+              label: request.label,
+              endpoint: request.endpoint,
+              records: await fetchPaginated<CsvRow>(
+                `/${request.endpoint}`,
+                abortController.signal,
+              ),
+            })),
+          ),
+          recordForSummary.source === "Assets" ||
+          recordForSummary.source === "Anomalies"
+            ? fetchRecord<CsvRow>(
+                "/records/ml-detections/summary",
+                abortController.signal,
+              ).catch(() => undefined)
+            : Promise.resolve(undefined),
+        ]);
+
+        setSummaryState({
+          key: currentKey,
+          status: "ready",
+          primary,
+          groups,
+          modelSummary,
+        });
+      } catch (error) {
+        if (abortController.signal.aborted) return;
+        console.error("Failed to load record summary", error);
+        setSummaryState({
+          key: currentKey,
+          status: "error",
+          primary: recordForSummary.fields,
+          groups: [],
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unable to load summary records.",
+        });
+      }
+    }
+
+    loadSummary();
+    return () => abortController.abort();
+  }, [panelMode, summaryApiPath, summaryKey, summaryRecord]);
 
   return (
     <div className="dataset-dashboard">
@@ -631,7 +888,7 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
         </label>
         <section className="selection-rail" aria-label="Current search selection">
           <p>Current selection</p>
-          {selectedLocations.length === 0 && selectedRecords.length === 0 ? (
+          {selectedRailRecords.length === 0 ? (
             <div className="rail-empty">
               Add map areas or data records to build a dive list.
             </div>
@@ -645,44 +902,89 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
                   Clear
                 </button>
               </div>
-              {selectedLocations.map((location) => (
-                <button
-                  key={location.location_id}
-                  type="button"
-                  onClick={() => toggleWaypoint(location.location_id)}
-                  onMouseEnter={() => setActiveWaypoint(location.location_id)}
-                  onFocus={() => setActiveWaypoint(location.location_id)}
+              {selectedRailRecords.map((record) => {
+                const isSummaryRecord =
+                  summaryRecord && recordKey(record) === recordKey(summaryRecord);
+                return (
+                  <article
+                    key={`${record.source}-${record.id}`}
+                    className={`rail-item ${isSummaryRecord ? "active" : ""}`}
+                    onMouseEnter={() => {
+                      if (record.locationId) setActiveWaypoint(record.locationId);
+                    }}
                 >
-                  <strong>{location.location_name}</strong>
-                  <span>{location.location_id}</span>
-                </button>
-              ))}
-              {selectedRecords.map((record) => (
-                <button
-                  key={record.id}
-                  type="button"
-                  onClick={() => toggleRecord(record)}
-                  onMouseEnter={() => {
-                    if (record.locationId) setActiveWaypoint(record.locationId);
-                  }}
-                  onFocus={() => {
-                    if (record.locationId) setActiveWaypoint(record.locationId);
-                  }}
-                >
-                  <strong>{record.title}</strong>
-                  <span>
-                    {record.source} / {record.subtype}
-                  </span>
-                </button>
-              ))}
+                    <button
+                      type="button"
+                      className="rail-item-main"
+                      onClick={() =>
+                        panelMode === "summary"
+                          ? selectSummaryRecord(record)
+                          : record.source === "Locations"
+                            ? toggleWaypoint(record.locationId)
+                            : toggleRecord(record)
+                      }
+                      onFocus={() => {
+                        if (record.locationId) setActiveWaypoint(record.locationId);
+                      }}
+                    >
+                      <strong>{record.title}</strong>
+                      <span>
+                        {record.source} / {record.subtype}
+                      </span>
+                    </button>
+                    {panelMode === "summary" ? (
+                      <button
+                        type="button"
+                        className="rail-item-action select"
+                        aria-pressed={Boolean(isSummaryRecord)}
+                        onClick={() => selectSummaryRecord(record)}
+                        title="Select for summary"
+                      >
+                        <CheckCircle2 size={14} aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="rail-item-action delete"
+                        onClick={() => deleteRailRecord(record)}
+                        title="Delete from rail"
+                      >
+                        <Trash2 size={14} aria-hidden="true" />
+                      </button>
+                    )}
+                  </article>
+                );
+              })}
             </>
           )}
         </section>
+        <div className="rail-view-toggle" aria-label="Dataset panel mode">
+          <button
+            type="button"
+            aria-pressed={panelMode === "search"}
+            onClick={() => setPanelMode("search")}
+            title="Show search"
+          >
+            <Search size={17} aria-hidden="true" />
+            <span>Search</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={panelMode === "summary"}
+            onClick={() => setPanelMode("summary")}
+            title="Show summary"
+          >
+            <FileSearch size={17} aria-hidden="true" />
+            <span>Summary</span>
+          </button>
+        </div>
       </aside>
 
       <main className="dataset-main">
         <header className="dataset-page-heading">
-          <h1 style={{"fontSize":"4.5rem", "marginTop":"2rem"}}>Search</h1>
+          <h1 style={{"fontSize":"4.5rem", "marginTop":"2rem"}}>
+            {panelMode === "search" ? "Search" : "Summary"}
+          </h1>
           <span>
             {apiStatus === "ready"
               ? ""
@@ -693,231 +995,362 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
         </header>
         <section
           ref={searchPanelRef}
-          className="dataset-search-panel"
-          aria-label="Dataset search"
-          style={{ height: searchPanelHeight }}
+          className={`dataset-search-panel ${
+            panelMode === "summary" ? "summary-page" : ""
+          }`}
+          aria-label={panelMode === "search" ? "Dataset search" : "Dataset summary"}
+          style={panelMode === "search" ? { height: searchPanelHeight } : undefined}
         >
-          <div className="dataset-controls">
-            <label className="dataset-search">
-              <span>Search data</span>
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search IDs, assets, anomalies, missions..."
-              />
-            </label>
-            <label>
-              <span>Data type</span>
-              <select
-                value={selectedSource}
-                onChange={(event) => {
-                  setSelectedSource(event.target.value as DatasetSource | "All");
-                  setSelectedSubtype("All");
-                }}
-              >
-                <option value="All">All data</option>
-                {sourceOptions.map((source) => (
-                  <option key={source} value={source}>
-                    {source}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Subtype</span>
-              <select
-                value={selectedSubtype}
-                onChange={(event) => setSelectedSubtype(event.target.value)}
-              >
-                <option value="All">All subtypes</option>
-                {subtypeOptions.map((subtype) => (
-                  <option key={subtype} value={subtype}>
-                    {subtype}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Location</span>
-              <select
-                value={selectedLocationFilter}
-                onChange={(event) => {
-                  setSelectedLocationFilter(event.target.value);
-                  if (event.target.value !== "All") setActiveWaypoint(event.target.value);
-                }}
-              >
-                <option value="All">All locations</option>
-                {locationOptions.map((locationId) => (
-                  <option key={locationId} value={locationId}>
-                    {locationId}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="source-chips" aria-label="Quick data filters">
-            {sourceOptions.map((source) => (
-              <button
-                key={source}
-                type="button"
-                aria-pressed={selectedSource === source}
-                onClick={() => {
-                  setSelectedSource((current) =>
-                    current === source ? "All" : source,
-                  );
-                  setSelectedSubtype("All");
-                }}
-              >
-                {source}
-              </button>
-            ))}
-          </div>
-
-          <section className="dataset-results" aria-label="Search results">
-            <div className="results-heading">
-              <div>
-                <h2>Search results</h2>
-                <span>{filteredRecords.length} shown</span>
-              </div>
-              <div className="results-actions">
-                <span>{selectedRecords.length} saved for dive</span>
-                <button type="button" onClick={focusMap}>
-                  Map
-                </button>
-              </div>
-            </div>
-            {filteredRecords.length === 0 ? (
-              <div className="dataset-empty">No matching records.</div>
-            ) : (
-              <div className="record-grid">
-                {filteredRecords.map((record) => {
-                  const isSelected =
-                    record.source === "Locations" && record.locationId
-                      ? selectedWaypoints.includes(record.locationId)
-                      : selectedRecordIds.includes(recordKey(record));
-                  return (
-                    <article className="record-card" key={`${record.source}-${record.id}`}>
-                      <div>
-                        <span>{record.source}</span>
-                        <span>{record.subtype}</span>
-                        {record.locationId && <span>{record.locationId}</span>}
-                      </div>
-                      <h3>{record.title}</h3>
-                      <p>{record.summary}</p>
-                      <button
-                        type="button"
-                        className="record-add"
-                        aria-pressed={isSelected}
-                        onClick={() => toggleRecord(record)}
-                      >
-                        {isSelected ? "Added" : "Add"}
-                      </button>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-          <div
-            className="resize-grip"
-            aria-label="Resize search panel"
-            role="separator"
-            onPointerDown={startSearchResize}
-          >
-            <span />
-            <span />
-            <span />
-          </div>
-        </section>
-
-        <section className="map-section" id="dataset-map" tabIndex={-1}>
-          <div className="map-heading">
-            <div>
-              <p className="dataset-kicker">Facility map</p>
-              <h2>Select with the Map!</h2>
-            </div>
-            <div className="map-summary">
-              <strong>{activeLocation?.location_name ?? "Select an area"}</strong>
-              <span>{activeWaypoint}</span>
-              <small>
-                {activeLocationRecords.length} matching records in current search
-              </small>
-            </div>
-          </div>
-
-          <div className="map-shell">
-            <div className="map-canvas">
-              <img src={floorPlanUrl} alt="Fictional facility floor plan" />
-              <svg
-                className="relay-overlay"
-                viewBox="0 0 100 100"
-                aria-hidden="true"
-                preserveAspectRatio="none"
-              >
-                <polyline className="relay-path replay" points={replayRelayPoints} />
-                {selectedLocations.length > 1 && (
-                  <polyline
-                    className="relay-path selected"
-                    points={selectedRelayPoints}
+          {panelMode === "search" ? (
+            <>
+              <div className="dataset-controls">
+                <label className="dataset-search">
+                  <span>Search data</span>
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search IDs, assets, anomalies, missions..."
                   />
+                </label>
+                <label>
+                  <span>Data type</span>
+                  <select
+                    value={selectedSource}
+                    onChange={(event) => {
+                      setSelectedSource(event.target.value as DatasetSource | "All");
+                      setSelectedSubtype("All");
+                    }}
+                  >
+                    <option value="All">All data</option>
+                    {sourceOptions.map((source) => (
+                      <option key={source} value={source}>
+                        {source}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Subtype</span>
+                  <select
+                    value={selectedSubtype}
+                    onChange={(event) => setSelectedSubtype(event.target.value)}
+                  >
+                    <option value="All">All subtypes</option>
+                    {subtypeOptions.map((subtype) => (
+                      <option key={subtype} value={subtype}>
+                        {subtype}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Location</span>
+                  <select
+                    value={selectedLocationFilter}
+                    onChange={(event) => {
+                      setSelectedLocationFilter(event.target.value);
+                      if (event.target.value !== "All") setActiveWaypoint(event.target.value);
+                    }}
+                  >
+                    <option value="All">All locations</option>
+                    {locationOptions.map((locationId) => (
+                      <option key={locationId} value={locationId}>
+                        {locationId}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="source-chips" aria-label="Quick data filters">
+                {sourceOptions.map((source) => (
+                  <button
+                    key={source}
+                    type="button"
+                    aria-pressed={selectedSource === source}
+                    onClick={() => {
+                      setSelectedSource((current) =>
+                        current === source ? "All" : source,
+                      );
+                      setSelectedSubtype("All");
+                    }}
+                  >
+                    {source}
+                  </button>
+                ))}
+              </div>
+
+              <section className="dataset-results" aria-label="Search results">
+                <div className="results-heading">
+                  <div>
+                    <h2>Search results</h2>
+                    <span>{filteredRecords.length} shown</span>
+                  </div>
+                  <div className="results-actions">
+                    <span>{selectedRecords.length} saved for dive</span>
+                    <button type="button" onClick={focusMap}>
+                      Map
+                    </button>
+                  </div>
+                </div>
+                {filteredRecords.length === 0 ? (
+                  <div className="dataset-empty">No matching records.</div>
+                ) : (
+                  <div className="record-grid">
+                    {filteredRecords.map((record) => {
+                      const isSelected =
+                        record.source === "Locations" && record.locationId
+                          ? selectedWaypoints.includes(record.locationId)
+                          : selectedRecordIds.includes(recordKey(record));
+                      return (
+                        <article className="record-card" key={`${record.source}-${record.id}`}>
+                          <div>
+                            <span>{record.source}</span>
+                            <span>{record.subtype}</span>
+                            {record.locationId && <span>{record.locationId}</span>}
+                          </div>
+                          <h3>{record.title}</h3>
+                          <p>{record.summary}</p>
+                          <button
+                            type="button"
+                            className="record-add"
+                            aria-pressed={isSelected}
+                            onClick={() => toggleRecord(record)}
+                          >
+                            {isSelected ? "Added" : "Add"}
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
                 )}
-                {replayLocations.map((location, index) => (
-                  <g
-                    className="relay-node replay"
-                    key={`${selectedMissionId}-${location.location_id}-${index}`}
-                    transform={`translate(${location.mapX} ${location.mapY})`}
-                  >
-                    <circle r="0.92" />
-                  </g>
-                ))}
-                {selectedLocations.map((location, index) => (
-                  <g
-                    className="relay-node selected"
-                    key={location.location_id}
-                    transform={`translate(${location.mapX} ${location.mapY})`}
-                  >
-                    <circle r="1.45" />
-                    <text y="0.35">{index + 1}</text>
-                  </g>
-                ))}
-              </svg>
-              {locations.map((location) => (
-                <button
-                  key={location.location_id}
-                  type="button"
-                  className={`waypoint-zone ${
-                    activeWaypoint === location.location_id ||
-                    selectedWaypoints.includes(location.location_id)
-                      ? "active"
-                      : ""
-                  }`}
-                  aria-pressed={selectedWaypoints.includes(location.location_id)}
-                  style={
-                    {
-                      left: `${location.zoneX}%`,
-                      top: `${location.zoneY}%`,
-                      width: `${location.zoneW}%`,
-                      height: `${location.zoneH}%`,
-                      "--zone-path": location.polygon
-                        ? `polygon(${location.polygon})`
-                        : "inset(0 round 8px)",
-                      "--pin-x": `${((location.mapX - location.zoneX) / location.zoneW) * 100}%`,
-                      "--pin-y": `${((location.mapY - location.zoneY) / location.zoneH) * 100}%`,
-                    } as CSSProperties
-                  }
-                  aria-label={`${location.location_id} ${location.location_name}`}
-                  onClick={() => toggleWaypoint(location.location_id)}
-                  onMouseEnter={() => setActiveWaypoint(location.location_id)}
-                  onFocus={() => setActiveWaypoint(location.location_id)}
-                >
-                  <span>{location.location_id}</span>
-                </button>
-              ))}
+              </section>
+            </>
+          ) : (
+            <section className="summary-panel" aria-label="Selected record summary">
+              {summaryRecord ? (
+                <>
+                  <div className="summary-heading">
+                    <div>
+                      <p className="dataset-kicker">Selected item summary</p>
+                      <h2>{summaryRecord.title}</h2>
+                      <span>
+                        {summaryRecord.source} / {summaryRecord.subtype}
+                        {summaryRecord.locationId ? ` / ${summaryRecord.locationId}` : ""}
+                      </span>
+                    </div>
+                    <button type="button" onClick={() => setPanelMode("search")}>
+                      <PanelLeft size={16} aria-hidden="true" />
+                      Search
+                    </button>
+                  </div>
+                  <div className="summary-body">
+                    <div className="summary-insights">
+                      {summaryHighlightsList.map((item) => (
+                        <article key={item.label}>
+                          <span>{item.label}</span>
+                          <strong>{item.value}</strong>
+                        </article>
+                      ))}
+                    </div>
+                    <div className="summary-details">
+                      <section className="summary-primary">
+                        <div className="summary-section-title">
+                          <TableProperties size={16} aria-hidden="true" />
+                          <h3>Primary record</h3>
+                        </div>
+                        <p>{summaryRecord.summary}</p>
+                        <dl>
+                          {Object.entries(summaryState?.primary ?? summaryRecord.fields)
+                            .filter(([, value]) => textValue(value) !== "")
+                            .slice(0, 12)
+                            .map(([key, value]) => (
+                              <div key={key}>
+                                <dt>{key.replaceAll("_", " ")}</dt>
+                                <dd>{textValue(value)}</dd>
+                              </div>
+                            ))}
+                        </dl>
+                      </section>
+                      <section className="summary-related">
+                        <div className="summary-section-title">
+                          <FileSearch size={16} aria-hidden="true" />
+                          <h3>Related API records</h3>
+                        </div>
+                        {summaryState?.key === summaryKey &&
+                        summaryState.status === "loading" ? (
+                          <div className="dataset-empty">Loading summary records.</div>
+                        ) : summaryState?.key === summaryKey &&
+                          summaryState.status === "error" ? (
+                          <div className="dataset-empty">
+                            {summaryState.error}
+                          </div>
+                        ) : summaryState?.groups.length ? (
+                          <div className="summary-related-list">
+                            {summaryState.groups.map((group) => (
+                              <article key={group.endpoint}>
+                                <div>
+                                  <strong>{group.label}</strong>
+                                  <span>{group.records.length} records</span>
+                                </div>
+                                <small>GET /api/{group.endpoint}</small>
+                                {group.records.slice(0, 3).map((row, index) => (
+                                  <p key={`${group.endpoint}-${index}`}>
+                                    {previewTitle(row)}
+                                    {previewMeta(row) ? ` / ${previewMeta(row)}` : ""}
+                                  </p>
+                                ))}
+                              </article>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="dataset-empty">No related API records found.</div>
+                        )}
+                      </section>
+                      {summaryState?.modelSummary && (
+                        <section className="summary-models">
+                          <div className="summary-section-title">
+                            <FileSearch size={16} aria-hidden="true" />
+                            <h3>ML detection summary</h3>
+                          </div>
+                          <dl>
+                            <div>
+                              <dt>Total models</dt>
+                              <dd>{textValue(summaryState.modelSummary.total_models)}</dd>
+                            </div>
+                            <div>
+                              <dt>Total detections</dt>
+                              <dd>{textValue(summaryState.modelSummary.total_detections)}</dd>
+                            </div>
+                            <div>
+                              <dt>Registered models</dt>
+                              <dd>
+                                {textValue(
+                                  summaryState.modelSummary.registered_model_count,
+                                )}
+                              </dd>
+                            </div>
+                          </dl>
+                        </section>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="summary-empty">
+                  <FileSearch size={24} aria-hidden="true" />
+                  <h2>Select a search result or map area.</h2>
+                  <p>
+                    Summary uses the selected record type to retrieve related
+                    records from the documented API endpoints.
+                  </p>
+                </div>
+              )}
+            </section>
+          )}
+          {panelMode === "search" && (
+            <div
+              className="resize-grip"
+              aria-label="Resize search panel"
+              role="separator"
+              onPointerDown={startSearchResize}
+            >
+              <span />
+              <span />
+              <span />
             </div>
-          </div>
+          )}
         </section>
+
+        {panelMode === "search" && (
+          <section className="map-section" id="dataset-map" tabIndex={-1}>
+            <div className="map-heading">
+              <div>
+                <p className="dataset-kicker">Facility map</p>
+                <h2>Select with the Map!</h2>
+              </div>
+              <div className="map-summary">
+                <strong>{activeLocation?.location_name ?? "Select an area"}</strong>
+                <span>{activeWaypoint}</span>
+                <small>
+                  {activeLocationRecords.length} matching records in current search
+                </small>
+              </div>
+            </div>
+
+            <div className="map-shell">
+              <div className="map-canvas">
+                <img src={floorPlanUrl} alt="Fictional facility floor plan" />
+                <svg
+                  className="relay-overlay"
+                  viewBox="0 0 100 100"
+                  aria-hidden="true"
+                  preserveAspectRatio="none"
+                >
+                  <polyline className="relay-path replay" points={replayRelayPoints} />
+                  {selectedLocations.length > 1 && (
+                    <polyline
+                      className="relay-path selected"
+                      points={selectedRelayPoints}
+                    />
+                  )}
+                  {replayLocations.map((location, index) => (
+                    <g
+                      className="relay-node replay"
+                      key={`${selectedMissionId}-${location.location_id}-${index}`}
+                      transform={`translate(${location.mapX} ${location.mapY})`}
+                    >
+                      <circle r="0.92" />
+                    </g>
+                  ))}
+                  {selectedLocations.map((location, index) => (
+                    <g
+                      className="relay-node selected"
+                      key={location.location_id}
+                      transform={`translate(${location.mapX} ${location.mapY})`}
+                    >
+                      <circle r="1.45" />
+                      <text y="0.35">{index + 1}</text>
+                    </g>
+                  ))}
+                </svg>
+                {locations.map((location) => (
+                  <button
+                    key={location.location_id}
+                    type="button"
+                    className={`waypoint-zone ${
+                      activeWaypoint === location.location_id ||
+                      selectedWaypoints.includes(location.location_id)
+                        ? "active"
+                        : ""
+                    }`}
+                    aria-pressed={selectedWaypoints.includes(location.location_id)}
+                    style={
+                      {
+                        left: `${location.zoneX}%`,
+                        top: `${location.zoneY}%`,
+                        width: `${location.zoneW}%`,
+                        height: `${location.zoneH}%`,
+                        "--zone-path": location.polygon
+                          ? `polygon(${location.polygon})`
+                          : "inset(0 round 8px)",
+                        "--pin-x": `${((location.mapX - location.zoneX) / location.zoneW) * 100}%`,
+                        "--pin-y": `${((location.mapY - location.zoneY) / location.zoneH) * 100}%`,
+                      } as CSSProperties
+                    }
+                    aria-label={`${location.location_id} ${location.location_name}`}
+                    onClick={() => toggleWaypoint(location.location_id)}
+                    onMouseEnter={() => setActiveWaypoint(location.location_id)}
+                    onFocus={() => setActiveWaypoint(location.location_id)}
+                  >
+                    <span>{location.location_id}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
