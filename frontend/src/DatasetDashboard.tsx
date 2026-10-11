@@ -694,7 +694,6 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
         <section
           ref={searchPanelRef}
           className="dataset-search-panel"
-          id="dataset-search"
           aria-label="Dataset search"
           style={{ height: searchPanelHeight }}
         >
