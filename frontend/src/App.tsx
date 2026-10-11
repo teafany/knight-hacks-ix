@@ -319,7 +319,7 @@ export default function App() {
             >
               <span className="action-label">
                 <ClipboardCheck aria-hidden="true" />
-                Integration dashboard
+                Inspection data
               </span>
               <ArrowRight aria-hidden="true" />
             </a>
