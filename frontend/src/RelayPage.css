@@ -163,13 +163,19 @@
   overflow: hidden;
   border: 1px solid #333127;
   border-radius: 8px;
-  background: #f8f7f2;
+  background:
+    radial-gradient(circle, rgba(223, 178, 56, 0.2) 1px, transparent 1.4px),
+    #12120f;
+  background-size: 18px 18px;
 }
 
 .relay-map-canvas {
   position: relative;
   width: min(calc(100% - 24px), calc((100svh - 326px) * 1.8403));
+  overflow: hidden;
+  border-radius: 8px;
   aspect-ratio: 1095 / 595;
+  box-shadow: 0 0 0 1px rgba(223, 178, 56, 0.18);
 }
 
 .relay-map-canvas img {
