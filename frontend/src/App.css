@@ -583,10 +583,6 @@ footer svg {
   min-height: 100svh;
 }
 
-.relay-route .relay-layout {
-  height: calc(100svh - 77px);
-}
-
 .dataset-page .dataset-dashboard {
   height: 100svh;
 }

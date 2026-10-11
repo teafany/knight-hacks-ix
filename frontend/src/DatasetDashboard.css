@@ -463,6 +463,7 @@
   min-height: 0;
   flex: 1;
   flex-direction: column;
+  overflow-y: auto;
   border-top: 1px solid #333127;
   background: transparent;
 }
@@ -509,6 +510,13 @@
   border-bottom: 1px solid #333127;
 }
 
+.results-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #1c1b17;
+}
+
 .results-heading h2 {
   margin: 0;
   font-size: 18px;
@@ -546,24 +554,22 @@
 }
 
 .record-grid {
-  display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 1px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: #333127;
+  flex: 0 0 auto;
+  column-width: 250px;
+  column-gap: 4px;
+  padding: 4px;
 }
 
 .record-card {
-  display: flex;
+  display: inline-flex;
   width: 100%;
   min-width: 0;
   flex-direction: column;
   gap: 6px;
+  margin: 0 0 4px;
   padding: 10px;
   background: #171611;
+  break-inside: avoid;
 }
 
 .record-card > div:first-child,
@@ -932,6 +938,47 @@
 
 .mission-path-control.rail-control select {
   width: 100%;
+}
+
+.map-replay-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 0 14px 14px;
+}
+
+.mission-path-control.map-replay-control {
+  width: min(100%, 360px);
+  padding: 10px;
+  border: 1px solid #2a2923;
+  border-radius: 8px;
+  background: #171611;
+}
+
+.mission-path-control.map-replay-control span {
+  color: #dfb238;
+}
+
+.mission-path-control.map-replay-control select {
+  width: 100%;
+}
+
+.map-replay-button {
+  min-height: 58px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #dfb238;
+  color: #12120f;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.map-replay-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .mission-path-control select {
