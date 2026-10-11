@@ -26,6 +26,12 @@ import readingsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/r
 import replayNdjson from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/replay.ndjson?raw";
 import floorPlanUrl from "../../SPOT_KnightHacks_Challenge_Kit Part One/04_ASSETS/fictional_floor_plan.png";
 import { apiURL } from "./apiConfig";
+import {
+  buildRouteSegments,
+  floorPlanPositions,
+  floorPlanZones,
+  formatRoutePoints,
+} from "./floorPlanRoutes";
 import "./DatasetDashboard.css";
 
 type DataValue =
@@ -148,87 +154,6 @@ const recordEndpoints: Partial<Record<DatasetSource, string>> = {
   Locations: "locations",
   Missions: "missions",
   Readings: "readings",
-};
-
-const floorPlanPositions: Record<string, { x: number; y: number }> = {
-  WP01: { x: 10.0, y: 76.5 },
-  WP02: { x: 10.2, y: 51.4 },
-  WP03: { x: 23.2, y: 38.6 },
-  WP04: { x: 19.7, y: 12.7 },
-  WP05: { x: 40.6, y: 36.2 },
-  WP06: { x: 50.7, y: 12.7 },
-  WP07: { x: 61.0, y: 47.0 },
-  WP08: { x: 35.0, y: 69.2 },
-  WP09: { x: 50.4, y: 69.2 },
-  WP10: { x: 61.8, y: 71.5 },
-  WP11: { x: 77.1, y: 21.7 },
-  WP12: { x: 90.7, y: 22.0 },
-  WP13: { x: 76.4, y: 54.4 },
-  WP14: { x: 89.8, y: 58.5 },
-  WP15: { x: 81.4, y: 79.8 },
-};
-
-const floorPlanZones: Record<
-  string,
-  { x: number; y: number; width: number; height: number; polygon?: string }
-> = {
-  WP01: { x: 6.2, y: 69.0, width: 11.2, height: 24.5 },
-  WP02: { x: 6.5, y: 42.3, width: 9.0, height: 25.0 },
-  WP03: { x: 15.2, y: 28.5, width: 13.6, height: 26.5 },
-  WP04: { x: 14.1, y: 4.7, width: 14.6, height: 22.6 },
-  WP05: { x: 28.4, y: 26.5, width: 28.5, height: 26.5 },
-  WP06: { x: 44.6, y: 4.8, width: 14.6, height: 22.5 },
-  WP07: {
-    x: 57.5,
-    y: 20.5,
-    width: 8.7,
-    height: 51.0,
-    polygon: "0 0, 58% 0, 58% 20%, 100% 20%, 100% 100%, 0 100%",
-  },
-  WP08: {
-    x: 26.5,
-    y: 55.6,
-    width: 18.0,
-    height: 35.4,
-    polygon: "0 0, 100% 0, 100% 100%, 15% 100%, 15% 58%, 0 58%",
-  },
-  WP09: {
-    x: 44.4,
-    y: 55.8,
-    width: 12.4,
-    height: 35.0,
-    polygon: "0 0, 100% 0, 100% 100%, 22% 100%, 22% 70%, 0 70%",
-  },
-  WP10: { x: 57.7, y: 61.5, width: 8.0, height: 27.0 },
-  WP11: { x: 71.0, y: 10.5, width: 11.8, height: 25.0 },
-  WP12: {
-    x: 83.0,
-    y: 3.0,
-    width: 13.2,
-    height: 33.0,
-    polygon: "0 0, 100% 0, 100% 100%, 0 100%, 0 27%",
-  },
-  WP13: {
-    x: 70.8,
-    y: 40.2,
-    width: 12.2,
-    height: 30.5,
-    polygon: "0 0, 85% 0, 85% 68%, 100% 68%, 100% 100%, 0 100%",
-  },
-  WP14: {
-    x: 83.0,
-    y: 42.4,
-    width: 13.4,
-    height: 27.0,
-    polygon: "0 0, 100% 0, 100% 100%, 0 100%, 0 18%",
-  },
-  WP15: {
-    x: 72.2,
-    y: 72.0,
-    width: 18.5,
-    height: 21.6,
-    polygon: "0 0, 45% 0, 45% 12%, 65% 12%, 65% 0, 100% 0, 100% 100%, 0 100%",
-  },
 };
 
 function parseCsv(csv: string): CsvRow[] {
@@ -834,9 +759,14 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
   const selectedRelayPoints = selectedLocations
     .map((location) => `${location.mapX},${location.mapY}`)
     .join(" ");
-  const replayRelayPoints = replayLocations
-    .map((location) => `${location.mapX},${location.mapY}`)
-    .join(" ");
+  const replayRouteSegments = buildRouteSegments(
+    replayLocations.map((location) => ({
+      locationId: location.location_id,
+      floor: location.floor,
+      x: location.mapX,
+      y: location.mapY,
+    })),
+  );
   const sourceOptions = datasets.map((dataset) => dataset.source);
   const subtypeOptions = Array.from(
     new Set(
@@ -1040,8 +970,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
     <div className="dataset-dashboard">
       <aside className="dataset-rail">
         <button type="button" className="dataset-brand" onClick={onHome}>
-          <span>S</span>
-          <strong>SPOT</strong>
+          <strong>SPOTLIGHT</strong>
         </button>
         <section className="selection-rail" aria-label="Current search selection">
           <p>Current selection</p>
@@ -1559,7 +1488,13 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
                   aria-hidden="true"
                   preserveAspectRatio="none"
                 >
-                  <polyline className="relay-path replay" points={replayRelayPoints} />
+                  {replayRouteSegments.map((segment, index) => (
+                    <polyline
+                      className="relay-path replay"
+                      key={`${selectedMissionId}-replay-route-${index}`}
+                      points={formatRoutePoints(segment)}
+                    />
+                  ))}
                   {selectedLocations.length > 1 && (
                     <polyline
                       className="relay-path selected"

@@ -49,27 +49,18 @@
 .summary-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  width: 100%;
   padding: 0;
   border: 0;
   color: var(--summary-ink);
   background: none;
-}
-.summary-brand > span {
-  display: grid;
-  width: 36px;
-  height: 38px;
-  place-items: center;
-  border-radius: 50%;
-  color: #12120f;
-  background: var(--summary-accent);
-  font-family: "Bitcount Single", monospace;
-  font-size: 24px;
+  text-align: center;
 }
 .summary-brand strong {
   font-family: "Bitcount Single", monospace;
-  font-size: 18px;
-  letter-spacing: 0.06em;
+  font-size: 19px;
+  letter-spacing: 0.08em;
 }
 .summary-nav-label {
   margin: 38px 10px 12px;

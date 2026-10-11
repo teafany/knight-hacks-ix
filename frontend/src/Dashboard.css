@@ -15,30 +15,14 @@
 :where(.operations-dashboard) .brand {
   display: flex;
   align-items: center;
-  gap: 11px;
+  justify-content: center;
+  width: 100%;
   font-family: "Bitcount Single", monospace;
-  font-size: 23px;
+  font-size: 20px;
   font-variation-settings: "wght" 650;
   font-weight: 750;
-  letter-spacing: 2px;
-}
-:where(.operations-dashboard) .brand-mark {
-  border: 1px solid #4dc7b4;
-  border-radius: 9px;
-  width: 35px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  background: #19382f;
-  color: #7ae9d2;
-  font-size: 22px;
-}
-:where(.operations-dashboard) .brand-sub {
-  display: block;
-  font-size: 8px;
-  letter-spacing: 1.4px;
-  color: #68665c;
-  margin-top: 4px;
+  letter-spacing: 0.08em;
+  text-align: center;
 }
 :where(.operations-dashboard) .nav-label,
 :where(.operations-dashboard) .eyebrow {
@@ -812,10 +796,13 @@
     width: 70px;
     padding: 22px 10px;
   }
-  :where(.operations-dashboard) .brand > span:last-child,
   :where(.operations-dashboard) .nav-label,
   :where(.operations-dashboard) .sidebar-footer {
     display: none;
+  }
+  :where(.operations-dashboard) .brand {
+    font-size: 9px;
+    letter-spacing: 0.02em;
   }
   :where(.operations-dashboard) nav {
     margin-top: 35px;
@@ -986,12 +973,6 @@
   margin-left: 0;
   flex: 1;
   min-width: 0;
-}
-.operations-dashboard .brand-mark {
-  background: #dfb238;
-  border-color: #dfb238;
-  color: #12120f;
-  border-radius: 50%;
 }
 .operations-dashboard .nav-active {
   background: #dfb238;
@@ -1224,13 +1205,6 @@
   letter-spacing: -0.02em;
 }
 
-.operations-dashboard .brand-mark {
-  background: #dfb238;
-  border-color: #dfb238;
-  color: #12120f;
-}
-
-.operations-dashboard .brand-sub,
 .operations-dashboard .nav-label,
 .operations-dashboard .eyebrow,
 .operations-dashboard .prototype-label,

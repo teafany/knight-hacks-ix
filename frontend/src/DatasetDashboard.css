@@ -27,31 +27,20 @@
 .dataset-brand {
   display: flex;
   align-items: center;
-  gap: 11px;
+  justify-content: center;
+  width: 100%;
   border: 0;
   background: transparent;
   color: #f8f7f2;
-  text-align: left;
-}
-
-.dataset-brand span {
-  display: grid;
-  width: 35px;
-  height: 38px;
-  place-items: center;
-  border-radius: 50%;
-  background: #dfb238;
-  color: #12120f;
-  font-family: "Bitcount Single", monospace;
-  font-size: 22px;
+  text-align: center;
 }
 
 .dataset-brand strong {
   font-family: "Bitcount Single", monospace;
-  font-size: 23px;
+  font-size: 20px;
   font-variation-settings: "wght" 650;
   font-weight: 750;
-  letter-spacing: 2px;
+  letter-spacing: 0.08em;
 }
 
 .selection-rail {
@@ -1352,7 +1341,8 @@
   }
 
   .dataset-brand strong {
-    display: none;
+    font-size: 16px;
+    letter-spacing: 0.04em;
   }
 
   .rail-item-main {

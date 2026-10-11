@@ -1002,7 +1002,6 @@ export default function SummaryPage({ onHome, onNavigate }: Props) {
           onClick={onHome}
           aria-label="Spotlight home"
         >
-          <span>S</span>
           <strong>SPOTLIGHT</strong>
         </button>
         <p className="summary-nav-label">Inspection intelligence</p>

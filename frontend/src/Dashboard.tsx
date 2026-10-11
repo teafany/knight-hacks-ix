@@ -381,11 +381,7 @@ return (
             else window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
-          <span className="brand-mark">S</span>
-          <span>
-            SPOT<span className="brand-sub">FACILITY LIDAR</span>
-
-          </span>
+          <span>SPOTLIGHT</span>
         </a>
 
         <nav aria-label="Dashboard sections" style={{ marginTop: 32 }}>

@@ -79,15 +79,6 @@ const capabilities: Capability[] = [
     target: "relay",
     icon: Route,
   },
-  {
-    id: "inspection-summary",
-    number: "06",
-    title: "The full picture",
-    text: "Bring mission outcomes, priority findings, saved AI evidence, and spatial changes into one inspection summary.",
-    meta: "Summary / Intelligence",
-    target: "summary",
-    icon: ClipboardCheck,
-  },
 ];
 
 export default function App() {
@@ -345,7 +336,7 @@ export default function App() {
             >
               <span className="action-label">
                 <Play aria-hidden="true" />
-                Replay relay
+                Replay missions
               </span>
               <ArrowRight aria-hidden="true" />
             </a>
