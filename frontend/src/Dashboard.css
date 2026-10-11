@@ -1477,3 +1477,14 @@
 .operations-dashboard .viewer-stage {
   position: relative;
 }
+
+
+@media (max-width: 640px) {
+  .operations-dashboard.app-shell {
+    flex-direction: column;
+  }
+
+  .operations-dashboard .dashboard-content {
+    width: 100%;
+  }
+}

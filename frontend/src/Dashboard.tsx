@@ -1,8 +1,11 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import { loadDashboard, loadLidar } from "./api";
 
 import type { DashboardData, Finding, LidarData, Severity } from "./types";
+
+import WorkspaceSidebar from "./WorkspaceSidebar";
+import type { SummarySelection } from "./summaryViews";
 
 import "./Dashboard.css";
 
@@ -40,11 +43,13 @@ const timestamp = (value: string | null | undefined) =>
 
 type DashboardProps = {
 
-  onHome?: () => void;
+  onHome: () => void;
+  onNavigate: (page: "dashboard" | "lidar" | "relay") => void;
+  onSummarySelect: (selection: SummarySelection | null) => void;
 
 };
 
-function Dashboard({ onHome }: DashboardProps) {
+function Dashboard({ onHome, onNavigate, onSummarySelect }: DashboardProps) {
 
     const [data, setData] = useState<DashboardData | null>(null);
 
@@ -72,6 +77,7 @@ const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
 
   const [showAllFindings, setShowAllFindings] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
+  const selectedSection = useRef<string | null>(null);
 
     useEffect(() => {
 
@@ -115,7 +121,7 @@ useEffect(() => {
 
         if (reason.name !== "AbortError")
 
-          setLidarError(`LiDAR assets could not load: ${reason.message}`);
+          setLidarError(`Lidar assets could not load: ${reason.message}`);
 
       });
 
@@ -128,6 +134,9 @@ useEffect(() => {
     const sectionIds = ["overview", "digital-twin", "findings", "missions"];
 
     const updateActiveSection = () => {
+      // A short final section can share the same scroll position as Findings.
+      // Keep an explicit section choice until the user scrolls manually.
+      if (selectedSection.current) return;
       const scrollPosition = window.scrollY + 180;
       let currentSection = "overview";
 
@@ -146,13 +155,29 @@ useEffect(() => {
       setActiveSection(currentSection);
     };
 
+    const resumeScrollTracking = () => {
+      selectedSection.current = null;
+    };
+    const resize = () => {
+      resumeScrollTracking();
+      updateActiveSection();
+    };
+
     window.addEventListener("scroll", updateActiveSection, { passive: true });
-    window.addEventListener("resize", updateActiveSection);
+    window.addEventListener("resize", resize);
+    window.addEventListener("wheel", resumeScrollTracking, { passive: true });
+    window.addEventListener("touchstart", resumeScrollTracking, { passive: true });
+    window.addEventListener("pointerdown", resumeScrollTracking);
+    window.addEventListener("keydown", resumeScrollTracking);
     updateActiveSection();
 
     return () => {
       window.removeEventListener("scroll", updateActiveSection);
-      window.removeEventListener("resize", updateActiveSection);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("wheel", resumeScrollTracking);
+      window.removeEventListener("touchstart", resumeScrollTracking);
+      window.removeEventListener("pointerdown", resumeScrollTracking);
+      window.removeEventListener("keydown", resumeScrollTracking);
     };
   }, []);
 
@@ -162,7 +187,7 @@ useEffect(() => {
 
   // Each visible detection box gets exactly one inspection finding.
 
-  // Hazard categories are fictional demo assignments, not LiDAR measurements.
+  // Hazard categories are fictional demo assignments, not Lidar measurements.
 
   const hazardExamples: Array<{
 
@@ -370,48 +395,23 @@ return (
 
       `}</style>
 
-            <aside className="sidebar">
-        <a
-          className="brand"
-          href="#"
-          aria-label="SPOT Facility LiDAR – Home"
-          onClick={(event) => {
-            event.preventDefault();
-            if (onHome) onHome();
-            else window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-        >
-          <span className="brand-mark">S</span>
-          <span>
-            SPOT<span className="brand-sub">FACILITY LIDAR</span>
-
-          </span>
-        </a>
-
-        <nav aria-label="Dashboard sections" style={{ marginTop: 32 }}>
-          <a href="#overview" className={activeSection === "overview" ? "nav-active" : ""}>
-            <span>▦</span>Overview
-          </a>
-          <a href="#digital-twin" className={activeSection === "digital-twin" ? "nav-active" : ""}>
-            <span>◇</span>Digital twin
-          </a>
-          <a href="#findings" className={activeSection === "findings" ? "nav-active" : ""}>
-            <span>◉</span>Findings
-          </a>
-          <a href="#missions" className={activeSection === "missions" ? "nav-active" : ""}>
-            <span>≡</span>Missions
-          </a>
-        </nav>
-
-        <div className="sidebar-footer">
-          <span className="dot amber" /> KNIGHT HACKS IX
-          <span>
-            Facility inspection workspace
-            <br />
-            Single-room inspection
-          </span>
-        </div>
-      </aside>
+      <WorkspaceSidebar
+        activePage="lidar"
+        activeSection={activeSection}
+        onHome={onHome}
+        onNavigate={onNavigate}
+        onSummarySelect={onSummarySelect}
+        onSectionSelect={(section) => {
+          selectedSection.current = section;
+          setActiveSection(section);
+          document.getElementById(section)?.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+              ? "instant"
+              : "smooth",
+            block: "start",
+          });
+        }}
+      />
 
       <div className="dashboard-content" id="overview">
 
@@ -419,7 +419,7 @@ return (
 
           <span>
 
-            LiDAR <span className="slash">/</span> Facility digital twin
+            Lidar <span className="slash">/</span> Facility Lidar
 
           </span>
 
@@ -433,7 +433,7 @@ return (
 
             <div className="eyebrow">INSPECTION INTELLIGENCE</div>
 
-            <h1>LiDAR workspace</h1>
+            <h1>Lidar workspace</h1>
 
             <p>
 
@@ -493,7 +493,7 @@ return (
 
               <div>
 
-                <h2>Facility digital twin</h2>
+                <h2>Facility Lidar</h2>
 
                 <p>Updated facility scan · WP01</p>
 
@@ -571,7 +571,7 @@ return (
 
               >
 
-                {lidarError || "Loading LiDAR exports…"}
+                {lidarError || "Loading Lidar exports…"}
 
               </div>
 

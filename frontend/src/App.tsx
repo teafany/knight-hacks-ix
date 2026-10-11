@@ -18,6 +18,8 @@ import Dashboard from "./Dashboard";
 import DatasetDashboard from "./DatasetDashboard";
 import RelayPage from "./RelayPage";
 import SummaryPage from "./SummaryPage";
+import FloatingNav from "./FloatingNav";
+import { summarySearch, type SummarySelection } from "./summaryViews";
 import robotImage from "./assets/spot-robot.svg";
 import "./App.css";
 
@@ -47,8 +49,8 @@ const capabilities: Capability[] = [
     id: "lidar-data",
     number: "02",
     title: "Spatial context",
-    text: "Understand every waypoint, asset, and inspection finding inside a simulated facility digital twin.",
-    meta: "3D / LiDAR",
+    text: "Understand every waypoint, asset, and inspection finding inside a simulated facility Lidar view.",
+    meta: "3D / Lidar",
     target: "digital-twin",
     icon: Boxes,
   },
@@ -172,24 +174,27 @@ export default function App() {
     }, 0);
   };
 
-  const openSummaryPage = () => {
+  const openSummaryPage = (selection: SummarySelection | null = null) => {
     setPage("summary");
-    window.history.pushState(null, "", "/summary");
+    const source =
+      page === "summary" &&
+      new URLSearchParams(window.location.search).get("source") === "api"
+        ? "api"
+        : "demo";
+    window.history.pushState(
+      null,
+      "",
+      `/summary${summarySearch(selection, source)}`,
+    );
+    window.dispatchEvent(new PopStateEvent("popstate"));
     window.scrollTo(0, 0);
   };
 
-  if (page === "summary") {
-    return (
-      <SummaryPage
-        onHome={openLandingPage}
-        onNavigate={(destination) => {
-          if (destination === "dashboard") openDashboardPage();
-          if (destination === "lidar") openLidarPage();
-          if (destination === "relay") openRelayPage();
-        }}
-      />
-    );
-  }
+  const navigateWorkspace = (destination: "dashboard" | "lidar" | "relay") => {
+    if (destination === "dashboard") openDashboardPage();
+    if (destination === "lidar") openLidarPage();
+    if (destination === "relay") openRelayPage();
+  };
 
   const navItems: {
     page: Page;
@@ -204,45 +209,50 @@ export default function App() {
       icon: BarChart3,
       onClick: openDashboardPage,
     },
-    { page: "relay", label: "Replay", icon: Play, onClick: openRelayPage },
+    {
+      page: "relay",
+      label: "Replay",
+      icon: Play,
+      onClick: () => openRelayPage(),
+    },
     {
       page: "lidar",
-      label: "LiDAR",
+      label: "Lidar",
       icon: Radar,
       onClick: () => openLidarPage(),
     },
+    {
+      page: "summary",
+      label: "Summary",
+      icon: ClipboardCheck,
+      onClick: () => openSummaryPage(),
+    },
   ];
 
-  const appNav = (
-    <nav className="app-nav" aria-label="Primary navigation">
-      <div className="app-nav-inner">
-        <div className="app-nav-links">
-          {navItems.map((item) => {
-            const NavIcon = item.icon;
-            return (
-              <button
-                type="button"
-                className={`app-nav-link ${page === item.page ? "active" : ""}`}
-                key={item.page}
-                onClick={item.onClick}
-                aria-current={page === item.page ? "page" : undefined}
-              >
-                <NavIcon aria-hidden="true" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </nav>
-  );
+  const appNav = <FloatingNav activePage={page} items={navItems} />;
+
+  if (page === "summary") {
+    return (
+      <>
+        {appNav}
+        <SummaryPage
+          onHome={openLandingPage}
+          onNavigate={navigateWorkspace}
+        />
+      </>
+    );
+  }
 
   if (page === "lidar") {
     return (
       <>
         {appNav}
         <main className="lidar-page" id="lidar">
-          <Dashboard onHome={openLandingPage} />
+          <Dashboard
+            onHome={openLandingPage}
+            onNavigate={navigateWorkspace}
+            onSummarySelect={openSummaryPage}
+          />
         </main>
       </>
     );
@@ -280,6 +290,7 @@ export default function App() {
 
   return (
     <main className="site-shell">
+      {appNav}
       <section className="hero" id="top" aria-labelledby="hero-title">
         <div className="intro">
           <p className="kicker">
@@ -332,7 +343,7 @@ export default function App() {
             >
               <span className="action-label">
                 <Radar aria-hidden="true" />
-                Explore LiDAR
+                Explore Lidar
               </span>
               <ArrowRight aria-hidden="true" />
             </a>
