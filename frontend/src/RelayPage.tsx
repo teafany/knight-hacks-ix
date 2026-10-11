@@ -630,8 +630,7 @@ function RelayPage({ onHome }: RelayPageProps) {
     <div className="relay-page">
       <header className="relay-topbar">
         <button type="button" className="relay-brand" onClick={onHome}>
-          <span>S</span>
-          <strong>Relay</strong>
+          <strong>Replay</strong>
         </button>
         <label className="relay-select">
           <span>Path</span>

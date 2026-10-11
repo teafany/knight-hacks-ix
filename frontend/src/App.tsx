@@ -6,6 +6,7 @@ import {
   Boxes,
   ClipboardCheck,
   GitCompareArrows,
+  Home,
   Map,
   Play,
   Radar,
@@ -28,6 +29,8 @@ type Capability = {
   target: string;
   icon: LucideIcon;
 };
+
+type Page = "landing" | "lidar" | "dashboard" | "relay";
 
 const capabilities: Capability[] = [
   {
@@ -78,7 +81,7 @@ const capabilities: Capability[] = [
 ];
 
 export default function App() {
-  const [page, setPage] = useState<"landing" | "lidar" | "dashboard" | "relay">(() => {
+  const [page, setPage] = useState<Page>(() => {
     if (window.location.pathname === "/relay") return "relay";
     if (window.location.hash === "#lidar") return "lidar";
     if (window.location.hash === "#dashboard") return "dashboard";
@@ -116,7 +119,7 @@ export default function App() {
 
   const openLidarPage = (target = "digital-twin") => {
     setPage("lidar");
-    window.history.pushState(null, "", "#lidar");
+    window.history.pushState(null, "", "/#lidar");
     window.setTimeout(() => {
       document.getElementById(target)?.scrollIntoView();
     }, 0);
@@ -124,7 +127,7 @@ export default function App() {
 
   const openDashboardPage = () => {
     setPage("dashboard");
-    window.history.pushState(null, "", "#dashboard");
+    window.history.pushState(null, "", "/#dashboard");
     window.setTimeout(() => {
       document.getElementById("dataset-search")?.scrollIntoView();
     }, 0);
@@ -138,33 +141,83 @@ export default function App() {
     }, 0);
   };
 
+  const navItems: {
+    page: Page;
+    label: string;
+    icon: LucideIcon;
+    onClick: () => void;
+  }[] = [
+    { page: "landing", label: "Home", icon: Home, onClick: openLandingPage },
+    {
+      page: "dashboard",
+      label: "Dashboard",
+      icon: BarChart3,
+      onClick: openDashboardPage,
+    },
+    { page: "relay", label: "Replay", icon: Play, onClick: openRelayPage },
+    { page: "lidar", label: "LiDAR", icon: Radar, onClick: () => openLidarPage() },
+  ];
+
+  const appNav = (
+    <nav className="app-nav" aria-label="Primary navigation">
+      <div className="app-nav-inner">
+        <div className="app-nav-links">
+          {navItems.map((item) => {
+            const NavIcon = item.icon;
+            return (
+              <button
+                type="button"
+                className={`app-nav-link ${page === item.page ? "active" : ""}`}
+                key={item.page}
+                onClick={item.onClick}
+                aria-current={page === item.page ? "page" : undefined}
+              >
+                <NavIcon aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </nav>
+  );
+
   if (page === "lidar") {
     return (
-      <main className="lidar-page" id="lidar">
-        <Dashboard onHome={openLandingPage} />
-      </main>
+      <>
+        {appNav}
+        <main className="lidar-page" id="lidar">
+          <Dashboard onHome={openLandingPage} />
+        </main>
+      </>
     );
   }
 
   if (page === "dashboard") {
     return (
-      <main className="dataset-page" id="dashboard">
-        <DatasetDashboard onHome={openLandingPage} />
-      </main>
+      <>
+        {appNav}
+        <main className="dataset-page" id="dashboard">
+          <DatasetDashboard onHome={openLandingPage} />
+        </main>
+      </>
     );
   }
 
   if (page === "relay") {
     return (
-      <main className="relay-route" id="relay">
-        <RelayPage onHome={openLandingPage} />
-      </main>
+      <>
+        {appNav}
+        <main className="relay-route" id="relay">
+          <RelayPage onHome={openLandingPage} />
+        </main>
+      </>
     );
   }
 
   return (
     <main className="site-shell">
-      <section className="hero" id="top" aria-labelledby="hero-title">
+        <section className="hero" id="top" aria-labelledby="hero-title">
         <div className="intro">
           <p className="kicker">
             <span />
@@ -246,7 +299,7 @@ export default function App() {
         </div>
       </section>
 
-      <section
+        <section
         className="capabilities-section"
         id="capabilities"
         aria-labelledby="capabilities-title"
@@ -295,7 +348,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="workflow-section" id="workflow">
+        <section className="workflow-section" id="workflow">
         <div className="workflow-intro">
           <p className="section-label">The mission loop</p>
           <h2>Replay. Understand. Act.</h2>
@@ -339,12 +392,12 @@ export default function App() {
         </ol>
       </section>
 
-      <footer id="contact">
+        <footer id="contact">
         <p>Autonomous inspection, made understandable.</p>
         <a href="#top">
           Back to mission <ArrowRight aria-hidden="true" />
         </a>
-      </footer>
-    </main>
+        </footer>
+      </main>
   );
 }

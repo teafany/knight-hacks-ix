@@ -56,6 +56,14 @@
   gap: 7px;
 }
 
+.relay-select {
+  grid-template-columns: auto minmax(220px, 1fr);
+  align-items: center;
+  justify-self: end;
+  width: min(100%, 520px);
+  gap: 10px;
+}
+
 .relay-select span,
 .relay-speed span,
 .relay-scrubber span {
@@ -63,8 +71,13 @@
   font-size: 11px;
 }
 
+.relay-select span {
+  text-align: right;
+}
+
 .relay-select select {
   min-height: 40px;
+  width: 100%;
   padding: 0 12px;
   border: 1px solid #333127;
   border-radius: 8px;
@@ -742,6 +755,15 @@
   .relay-stage-heading,
   .relay-controls {
     grid-template-columns: 1fr;
+  }
+
+  .relay-select {
+    grid-template-columns: 1fr;
+    justify-self: stretch;
+  }
+
+  .relay-select span {
+    text-align: left;
   }
 
   .relay-stage-heading {
