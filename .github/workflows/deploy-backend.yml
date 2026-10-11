@@ -1,9 +1,10 @@
-name: Backend tests and Vultr deployment
+name: App tests and Vultr deployment
 
 on:
   push:
     branches: [main]
     paths:
+      - 'frontend/**'
       - 'server/**'
       - 'models/**'
       - 'deploy/**'
@@ -12,6 +13,7 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'frontend/**'
       - 'server/**'
       - 'models/**'
       - 'deploy/**'
@@ -23,6 +25,24 @@ permissions:
   contents: read
 
 jobs:
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --prefix frontend
+      - name: Build frontend for the shared HTTPS origin
+        env:
+          VITE_API_BASE_URL: /api
+        run: npm --prefix frontend run build
+
   test:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -72,7 +92,7 @@ jobs:
           python models/verify_publish.py
 
   deploy:
-    needs: test
+    needs: [test, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -110,3 +130,12 @@ jobs:
             --retry 5 --retry-delay 3 "https://$VULTR_HOST/api/health"
           curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
             "https://$VULTR_HOST/api/metrics" > /dev/null
+      - name: Verify public frontend and bundled assets
+        run: |
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
+            "https://$VULTR_HOST/" > /tmp/frontend.html
+          grep -q 'id="root"' /tmp/frontend.html
+          asset=$(sed -n 's/.*src="\([^"]*\/assets\/[^" ]*\.js\)".*/\1/p' /tmp/frontend.html | head -1)
+          test -n "$asset"
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
+            "https://$VULTR_HOST$asset" > /dev/null
