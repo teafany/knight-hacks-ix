@@ -1,0 +1,342 @@
+[
+    {
+        "id": "real_change_003",
+        "type": "geometric_change",
+        "position": {
+            "x": -1.219502472746521,
+            "y": -0.8139664925488278,
+            "z": 2.7456093447519527
+        },
+        "dimensions": {
+            "x": 1.2101106170975162,
+            "y": 0.48064259534175124,
+            "z": 1.0565246346958945
+        },
+        "point_count": 336,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_004",
+        "type": "geometric_change",
+        "position": {
+            "x": 1.3843083615350298,
+            "y": -0.91225444584859,
+            "z": 1.1221351610297232
+        },
+        "dimensions": {
+            "x": 1.2737245421149466,
+            "y": 0.6193021886082626,
+            "z": 1.907107870890343
+        },
+        "point_count": 732,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_007",
+        "type": "geometric_change",
+        "position": {
+            "x": 0.810373517724844,
+            "y": -0.7236876011146767,
+            "z": 3.462686099286866
+        },
+        "dimensions": {
+            "x": 1.8165076617376823,
+            "y": 0.5162547308062789,
+            "z": 0.8334819058717482
+        },
+        "point_count": 314,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_008",
+        "type": "geometric_change",
+        "position": {
+            "x": 2.8810707896948617,
+            "y": -0.7609275149519568,
+            "z": -2.158766498293061
+        },
+        "dimensions": {
+            "x": 1.394220298780307,
+            "y": 0.6393299992396829,
+            "z": 1.51719137342169
+        },
+        "point_count": 536,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_009",
+        "type": "geometric_change",
+        "position": {
+            "x": -0.7775495091905154,
+            "y": -0.8866314621571714,
+            "z": -3.105260251139267
+        },
+        "dimensions": {
+            "x": 1.4764244351964861,
+            "y": 0.5765797681468379,
+            "z": 1.3971521193146077
+        },
+        "point_count": 543,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_010",
+        "type": "geometric_change",
+        "position": {
+            "x": -5.010023787872759,
+            "y": -0.4786186511642154,
+            "z": -1.351811970623554
+        },
+        "dimensions": {
+            "x": 0.5085422756235252,
+            "y": 0.9711010001253058,
+            "z": 1.1995055367154301
+        },
+        "point_count": 201,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_014",
+        "type": "geometric_change",
+        "position": {
+            "x": 1.597913476365303,
+            "y": -0.7032632190997208,
+            "z": -3.6012274668321913
+        },
+        "dimensions": {
+            "x": 1.2440954497374914,
+            "y": 0.5111679772515465,
+            "z": 1.177934773187045
+        },
+        "point_count": 491,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_018",
+        "type": "geometric_change",
+        "position": {
+            "x": -2.280985762783391,
+            "y": 1.4595982832073737,
+            "z": 0.8240836764630879
+        },
+        "dimensions": {
+            "x": 1.0837573202292143,
+            "y": 0.4122915797390396,
+            "z": 1.1809419621892858
+        },
+        "point_count": 400,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_024",
+        "type": "geometric_change",
+        "position": {
+            "x": 1.9487813163766126,
+            "y": -0.9885583118283483,
+            "z": -1.0500311438610532
+        },
+        "dimensions": {
+            "x": 0.7755045152232047,
+            "y": 0.7000693531388543,
+            "z": 0.6534891868051805
+        },
+        "point_count": 229,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_025",
+        "type": "geometric_change",
+        "position": {
+            "x": -2.4099257851941926,
+            "y": -0.9849245596899631,
+            "z": -1.8049801128784089
+        },
+        "dimensions": {
+            "x": 1.3017791712409497,
+            "y": 0.4760619206659371,
+            "z": 0.6872077701234389
+        },
+        "point_count": 360,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_027",
+        "type": "geometric_change",
+        "position": {
+            "x": 0.29018799052816835,
+            "y": -1.025532135642189,
+            "z": 0.7347490118966244
+        },
+        "dimensions": {
+            "x": 0.6073335472502843,
+            "y": 0.5707450719790902,
+            "z": 1.005593292722788
+        },
+        "point_count": 246,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_028",
+        "type": "geometric_change",
+        "position": {
+            "x": -2.3936381409472136,
+            "y": -0.569753525598509,
+            "z": -3.1463617696804675
+        },
+        "dimensions": {
+            "x": 1.3121942040104952,
+            "y": 1.1171618130040646,
+            "z": 0.4209908723449787
+        },
+        "point_count": 392,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_032",
+        "type": "geometric_change",
+        "position": {
+            "x": -0.5233386276982624,
+            "y": -0.2270526665085111,
+            "z": -5.938750955793991
+        },
+        "dimensions": {
+            "x": 0.7381976600979366,
+            "y": 0.418328406898768,
+            "z": 0.3284732571442621
+        },
+        "point_count": 152,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_033",
+        "type": "geometric_change",
+        "position": {
+            "x": -0.01803005636083735,
+            "y": -1.5628162567188006,
+            "z": -2.4567176023592348
+        },
+        "dimensions": {
+            "x": 0.9883887922917061,
+            "y": 0.3206149702239456,
+            "z": 0.9218487580676995
+        },
+        "point_count": 245,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_037",
+        "type": "geometric_change",
+        "position": {
+            "x": -4.231155184818312,
+            "y": -1.0472368493442878,
+            "z": -1.7064340295429083
+        },
+        "dimensions": {
+            "x": 0.468540405368151,
+            "y": 0.4350440073919767,
+            "z": 0.9425236541472801
+        },
+        "point_count": 209,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_040",
+        "type": "geometric_change",
+        "position": {
+            "x": 3.592385861789568,
+            "y": -1.5654537653790086,
+            "z": -0.3690170539972991
+        },
+        "dimensions": {
+            "x": 1.4507641476791946,
+            "y": 0.3873707963653037,
+            "z": 1.095393662723617
+        },
+        "point_count": 316,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_042",
+        "type": "geometric_change",
+        "position": {
+            "x": -1.188375510074199,
+            "y": -1.5920144821470987,
+            "z": -2.2213613789946187
+        },
+        "dimensions": {
+            "x": 1.013298609808853,
+            "y": 0.23395809788925837,
+            "z": 0.8437977568264636
+        },
+        "point_count": 186,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_044",
+        "type": "geometric_change",
+        "position": {
+            "x": -1.0321908964044106,
+            "y": -0.96509700436112,
+            "z": 1.393667821915228
+        },
+        "dimensions": {
+            "x": 0.7732354944718443,
+            "y": 0.4718037079353117,
+            "z": 0.6876534678310824
+        },
+        "point_count": 200,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_047",
+        "type": "geometric_change",
+        "position": {
+            "x": -1.1643718488725927,
+            "y": -0.6761198359370238,
+            "z": -4.561783804052105
+        },
+        "dimensions": {
+            "x": 0.702270041227899,
+            "y": 0.4530345538411855,
+            "z": 0.5209547960693044
+        },
+        "point_count": 151,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    },
+    {
+        "id": "real_change_051",
+        "type": "geometric_change",
+        "position": {
+            "x": 0.41428863619588996,
+            "y": -0.815317980593708,
+            "z": 2.2648459330571478
+        },
+        "dimensions": {
+            "x": 0.67976313220555,
+            "y": 0.4185585946924799,
+            "z": 0.6989032871721497
+        },
+        "point_count": 158,
+        "source": "real_polycam_scan_comparison",
+        "review_status": "unreviewed"
+    }
+]

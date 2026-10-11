@@ -189,6 +189,7 @@ export default function FacilityViewer({
         change.position.y,
         change.position.z,
       );
+      
       clusterGroup.userData.changeId = change.id;
       clusterGroup.userData.pointCount = change.point_count;
       obstruction.add(clusterGroup);
@@ -197,7 +198,8 @@ export default function FacilityViewer({
     sceneState.current = { markers, obstruction, controls, camera };
 
     new GLTFLoader().load(
-  "/lidar/baseline_room.glb",
+  //"/lidar/baseline_room.glb",
+  "/lidar/update_room_hazard.glb",
   (gltf) => {
     if (disposed) return;
 
