@@ -1,10 +1,35 @@
 import { useEffect, useState } from "react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  BarChart3,
+  Boxes,
+  ClipboardCheck,
+  GitCompareArrows,
+  Map,
+  Play,
+  Radar,
+  Route,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
 import Dashboard from "./Dashboard";
 import DatasetDashboard from "./DatasetDashboard";
+import RelayPage from "./RelayPage";
 import robotImage from "./assets/spot-robot.svg";
 import "./App.css";
 
-const capabilities = [
+type Capability = {
+  id: string;
+  number: string;
+  title: string;
+  text: string;
+  meta: string;
+  target: string;
+  icon: LucideIcon;
+};
+
+const capabilities: Capability[] = [
   {
     id: "existing-inspections",
     number: "01",
@@ -12,6 +37,7 @@ const capabilities = [
     text: "Compare mission completion, action failures, durations, and battery use across historical inspections.",
     meta: "Dashboard / Missions",
     target: "missions",
+    icon: BarChart3,
   },
   {
     id: "lidar-data",
@@ -20,6 +46,7 @@ const capabilities = [
     text: "Understand every waypoint, asset, and inspection finding inside a simulated facility digital twin.",
     meta: "3D / LiDAR",
     target: "digital-twin",
+    icon: Boxes,
   },
   {
     id: "anomaly-analysis",
@@ -28,6 +55,7 @@ const capabilities = [
     text: "Turn raw inspection signals into prioritized anomalies with clear, explainable evidence.",
     meta: "Analysis / Findings",
     target: "findings",
+    icon: AlertTriangle,
   },
   {
     id: "timeline-events",
@@ -36,46 +64,51 @@ const capabilities = [
     text: "Compare baseline and improved scenarios while keeping mission completion separate from action success.",
     meta: "Baseline / Improved",
     target: "missions",
+    icon: GitCompareArrows,
+  },
+  {
+    id: "relay-replay",
+    number: "05",
+    title: "Relay replay",
+    text: "Play back the replay.ndjson mission feed, watch SPOT move, and inspect related action events in time.",
+    meta: "Replay / Timeline",
+    target: "relay",
+    icon: Route,
   },
 ];
 
-function ArrowIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14M14 7l5 5-5 5" />
-    </svg>
-  );
-}
-
 export default function App() {
-  const [page, setPage] = useState<"landing" | "lidar" | "dashboard">(() => {
+  const [page, setPage] = useState<"landing" | "lidar" | "dashboard" | "relay">(() => {
+    if (window.location.pathname === "/relay") return "relay";
     if (window.location.hash === "#lidar") return "lidar";
     if (window.location.hash === "#dashboard") return "dashboard";
+    if (window.location.hash === "#relay") return "relay";
     return "landing";
   });
 
   useEffect(() => {
-    const onHashChange = () => {
+    const syncRoute = () => {
+      if (window.location.pathname === "/relay") {
+        setPage("relay");
+        return;
+      }
       if (window.location.hash === "#lidar") setPage("lidar");
       if (window.location.hash === "#dashboard") setPage("dashboard");
+      if (window.location.hash === "#relay") setPage("relay");
       if (window.location.hash === "#top") setPage("landing");
     };
 
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+    window.addEventListener("hashchange", syncRoute);
+    window.addEventListener("popstate", syncRoute);
+    return () => {
+      window.removeEventListener("hashchange", syncRoute);
+      window.removeEventListener("popstate", syncRoute);
+    };
   }, []);
 
   const openLandingPage = () => {
     setPage("landing");
-    window.history.pushState(null, "", "#top");
+    window.history.pushState(null, "", "/#top");
     window.setTimeout(() => {
       document.getElementById("top")?.scrollIntoView();
     }, 0);
@@ -97,6 +130,14 @@ export default function App() {
     }, 0);
   };
 
+  const openRelayPage = () => {
+    setPage("relay");
+    window.history.pushState(null, "", "/relay");
+    window.setTimeout(() => {
+      document.getElementById("relay")?.scrollIntoView();
+    }, 0);
+  };
+
   if (page === "lidar") {
     return (
       <main className="lidar-page" id="lidar">
@@ -109,6 +150,14 @@ export default function App() {
     return (
       <main className="dataset-page" id="dashboard">
         <DatasetDashboard onHome={openLandingPage} />
+      </main>
+    );
+  }
+
+  if (page === "relay") {
+    return (
+      <main className="relay-route" id="relay">
+        <RelayPage onHome={openLandingPage} />
       </main>
     );
   }
@@ -139,18 +188,11 @@ export default function App() {
                 openDashboardPage();
               }}
             >
-              Integration dashboard
-              <ArrowIcon />
-            </a>
-            <a
-              href="#lidar"
-              onClick={(event) => {
-                event.preventDefault();
-                openLidarPage("missions");
-              }}
-            >
-              Previous inspections
-              <ArrowIcon />
+              <span className="action-label">
+                <ClipboardCheck aria-hidden="true" />
+                Integration dashboard
+              </span>
+              <ArrowRight aria-hidden="true" />
             </a>
             <a
               href="#lidar"
@@ -159,8 +201,24 @@ export default function App() {
                 openLidarPage("digital-twin");
               }}
             >
-              Explore LiDAR
-              <ArrowIcon />
+              <span className="action-label">
+                <Radar aria-hidden="true" />
+                Explore LiDAR
+              </span>
+              <ArrowRight aria-hidden="true" />
+            </a>
+            <a
+              href="/relay"
+              onClick={(event) => {
+                event.preventDefault();
+                openRelayPage();
+              }}
+            >
+              <span className="action-label">
+                <Play aria-hidden="true" />
+                Replay relay
+              </span>
+              <ArrowRight aria-hidden="true" />
             </a>
           </div>
         </div>
@@ -168,12 +226,12 @@ export default function App() {
         <div className="visual" aria-label="Spot robot mission overview">
           <div className="status-pill">
             <span />
-            Synthetic inspection data
+            bz-woof! hello!!
           </div>
           <div className="mission-card">
             <p>Inspection workspace</p>
             <strong>15</strong>
-            <span>facility waypoints</span>
+            <span>facility <br></br>waypoints</span>
             <div className="mission-meta">
               <span>Synthetic dataset</span>
               <span>Historical records</span>
@@ -200,30 +258,40 @@ export default function App() {
           </h2>
         </div>
         <div className="capability-grid">
-          {capabilities.map((capability) => (
-            <article
-              className="capability-card"
-              id={capability.id}
-              key={capability.number}
-            >
-              <div className="card-topline">
-                <span>{capability.number}</span>
-                <span>{capability.meta}</span>
-              </div>
-              <h3>{capability.title}</h3>
-              <p>{capability.text}</p>
-              <a
-                className="capability-link"
-                href="#lidar"
-                onClick={(event) => {
-                  event.preventDefault();
-                  openLidarPage(capability.target);
-                }}
+          {capabilities.map((capability) => {
+            const CapabilityIcon = capability.icon;
+            return (
+              <article
+                className="capability-card"
+                id={capability.id}
+                key={capability.number}
               >
-                Open workspace <ArrowIcon />
-              </a>
-            </article>
-          ))}
+                <div className="card-topline">
+                  <span>{capability.number}</span>
+                  <span className="card-meta">
+                    <span>{capability.meta}</span>
+                    <CapabilityIcon aria-hidden="true" />
+                  </span>
+                </div>
+                <h3>{capability.title}</h3>
+                <p>{capability.text}</p>
+                <a
+                  className="capability-link"
+                  href="#lidar"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    if (capability.target === "relay") {
+                      openRelayPage();
+                    } else {
+                      openLidarPage(capability.target);
+                    }
+                  }}
+                >
+                  Open workspace <ArrowRight aria-hidden="true" />
+                </a>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -234,7 +302,9 @@ export default function App() {
         </div>
         <ol className="workflow-list">
           <li>
-            <span>01</span>
+            <span>
+              <ClipboardCheck aria-hidden="true" />
+            </span>
             <div>
               <strong>Capture</strong>
               <p>
@@ -243,7 +313,9 @@ export default function App() {
             </div>
           </li>
           <li>
-            <span>02</span>
+            <span>
+              <Map aria-hidden="true" />
+            </span>
             <div>
               <strong>Contextualize</strong>
               <p>
@@ -253,7 +325,9 @@ export default function App() {
             </div>
           </li>
           <li>
-            <span>03</span>
+            <span>
+              <Workflow aria-hidden="true" />
+            </span>
             <div>
               <strong>Prioritize</strong>
               <p>
@@ -268,7 +342,7 @@ export default function App() {
       <footer id="contact">
         <p>Autonomous inspection, made understandable.</p>
         <a href="#top">
-          Back to mission <ArrowIcon />
+          Back to mission <ArrowRight aria-hidden="true" />
         </a>
       </footer>
     </main>

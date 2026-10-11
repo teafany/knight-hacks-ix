@@ -102,7 +102,19 @@ h1 strong {
     color 180ms ease;
 }
 
-.actions svg {
+.action-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-label svg {
+  width: 19px;
+  height: 19px;
+}
+
+.actions > a > svg {
   width: 22px;
   height: 22px;
   flex: 0 0 auto;
@@ -115,7 +127,7 @@ h1 strong {
   transform: translateY(-3px);
 }
 
-.actions > a:hover svg {
+.actions > a:hover > svg {
   transform: translateX(4px);
 }
 
@@ -225,17 +237,17 @@ h1 strong {
 }
 
 .capabilities-section {
-  padding: 104px clamp(24px, 5.5vw, 84px) 110px;
+  padding: 82px clamp(24px, 5.5vw, 84px) 90px;
   background: #12120f;
   color: #f8f7f2;
 }
 
 .section-heading {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 32px;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.25fr);
+  gap: clamp(28px, 4vw, 64px);
   align-items: start;
-  margin-bottom: 62px;
+  margin-bottom: 48px;
 }
 
 .section-heading > p {
@@ -254,7 +266,7 @@ h1 strong {
   max-width: 850px;
   margin: 0;
   font-family: "Bitcount Single", monospace;
-  font-size: clamp(38px, 5vw, 72px);
+  font-size: clamp(34px, 4.3vw, 60px);
   font-variation-settings: "wght" 520;
   font-weight: 520;
   line-height: 1.02;
@@ -263,16 +275,19 @@ h1 strong {
 
 .capability-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(5, minmax(190px, 1fr));
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-color: rgba(223, 178, 56, 0.55) rgba(248, 247, 242, 0.08);
 }
 
 .capability-card {
   display: flex;
-  min-height: 320px;
+  min-height: 300px;
   flex-direction: column;
-  padding: 28px;
-  border-radius: 24px;
+  padding: 24px;
+  border-radius: 22px;
   background: #22221e;
   transition:
     transform 200ms ease,
@@ -287,6 +302,7 @@ h1 strong {
 .card-topline {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   color: #9c9a90;
   font-family: "Bitcount Single", monospace;
   font-size: 9px;
@@ -300,10 +316,24 @@ h1 strong {
   color: #dfb238;
 }
 
+.card-meta {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  text-align: right;
+}
+
+.card-meta svg {
+  width: 25px;
+  height: 25px;
+  color: #dfb238;
+  stroke-width: 1.8;
+}
+
 .capability-card h3 {
   margin: auto 0 14px;
   font-family: "Bitcount Single", monospace;
-  font-size: clamp(22px, 2vw, 29px);
+  font-size: clamp(20px, 1.55vw, 25px);
   font-variation-settings: "wght" 530;
   font-weight: 530;
   letter-spacing: -0.02em;
@@ -312,8 +342,8 @@ h1 strong {
 .capability-card p {
   margin: 0;
   color: #aaa89f;
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .workflow-section {
@@ -346,11 +376,23 @@ h1 strong {
 }
 
 .workflow-list li > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: #12120f;
   font-family: "Bitcount Single", monospace;
   font-size: 10px;
   font-variation-settings: "wght" 650;
   font-weight: 800;
   letter-spacing: 0.08em;
+}
+
+.workflow-list li > span svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 1.9;
 }
 
 .workflow-list strong {
@@ -450,10 +492,6 @@ footer > * {
 }
 
 @media (max-width: 960px) {
-  .capability-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .capability-card {
     min-height: 280px;
   }
@@ -560,10 +598,6 @@ footer > * {
   .capabilities-section,
   .workflow-section {
     padding: 76px 20px;
-  }
-
-  .capability-grid {
-    grid-template-columns: 1fr;
   }
 
   .capability-card {
