@@ -1,876 +1,1237 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+
 import { loadDashboard, loadLidar } from "./api";
+
 import type { DashboardData, Finding, LidarData, Severity } from "./types";
+
 import "./Dashboard.css";
 
 const FacilityViewer = lazy(() => import("./components/FacilityViewer"));
+
 const severities: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
+
 const pct = (value: number | null | undefined) =>
+
   value == null ? "—" : `${value.toFixed(1)}%`;
+
 const timestamp = (value: string | null | undefined) =>
+
   value
+
     ? new Date(value).toLocaleString("en-US", {
+
         timeZone: "UTC",
+
         month: "short",
+
         day: "numeric",
+
         year: "numeric",
+
         hour: "2-digit",
+
         minute: "2-digit",
+
         hour12: false,
+
       }) + " UTC"
+
     : "Not available";
 
 type DashboardProps = {
+
   onHome?: () => void;
+
 };
 
 function Dashboard({ onHome }: DashboardProps) {
-  const [mode, setMode] = useState<"demo" | "api">("demo");
-  const [refresh, setRefresh] = useState(0);
-  const [data, setData] = useState<DashboardData | null>(null);
+
+    const [data, setData] = useState<DashboardData | null>(null);
+
   const [lidar, setLidar] = useState<LidarData | null>(null);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
+
   const [lidarError, setLidarError] = useState("");
-  const [selectedWaypoint, setSelectedWaypoint] = useState("WP05");
-  const [showHistory, setShowHistory] = useState(true);
+
+  const selectedWaypoint = "WP01";
+
+  const showHistory = false;
+
   const [showObstruction, setShowObstruction] = useState(true);
-  const [scenario, setScenario] = useState("ALL");
+
   const [severity, setSeverity] = useState("ALL");
-  const [location, setLocation] = useState("ALL");
-  const [missionFilter, setMissionFilter] = useState("ALL");
-  const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
+
+const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
+
   const [search, setSearch] = useState("");
+
   const [reviewOnly, setReviewOnly] = useState(false);
+
   const [showAllFindings, setShowAllFindings] = useState(false);
-  const [showAllMissions, setShowAllMissions] = useState(false);
+  const [activeSection, setActiveSection] = useState("overview");
 
-  useEffect(() => {
+    useEffect(() => {
+
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
-    loadDashboard(mode, controller.signal)
+
+    loadDashboard("demo", controller.signal)
+
       .then((result) => {
-        if (controller.signal.aborted) return;
-        setData(result);
-        setLoading(false);
-        clearTimeout(timeout);
-      })
-      .catch((reason) => {
-        if (controller.signal.aborted) return;
-        setError(
-          mode === "api"
-            ? `Django API unavailable. Check the backend connection, then retry. ${reason.message}`
-            : `Demo data could not load. ${reason.message}`,
-        );
-        setLoading(false);
-        clearTimeout(timeout);
-      });
-    const onAbort = () => {
-      setError("Request timed out. Check the backend and retry.");
-      setLoading(false);
-    };
-    controller.signal.addEventListener("abort", onAbort);
-    return () => {
-      clearTimeout(timeout);
-      controller.signal.removeEventListener("abort", onAbort);
-      controller.abort();
-    };
-  }, [mode, refresh]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    loadLidar(controller.signal)
-      .then(setLidar)
+        if (!controller.signal.aborted) setData(result);
+
+      })
+
       .catch((reason) => {
-        if (reason.name !== "AbortError")
-          setLidarError(`LiDAR assets could not load: ${reason.message}`);
+
+        if (!controller.signal.aborted) setError(`Inspection data could not load: ${reason.message}`);
+
+      })
+
+      .finally(() => {
+
+        if (!controller.signal.aborted) setLoading(false);
+
       });
+
     return () => controller.abort();
+
   }, []);
 
-  const metrics = data?.metrics;
+
+
+useEffect(() => {
+
+    const controller = new AbortController();
+
+    loadLidar(controller.signal)
+
+      .then(setLidar)
+
+      .catch((reason) => {
+
+        if (reason.name !== "AbortError")
+
+          setLidarError(`LiDAR assets could not load: ${reason.message}`);
+
+      });
+
+    return () => controller.abort();
+
+  }, []);
+
+    // Highlight the sidebar link for the section currently in view.
+  useEffect(() => {
+    const sectionIds = ["overview", "digital-twin", "findings", "missions"];
+
+    const updateActiveSection = () => {
+      const scrollPosition = window.scrollY + 180;
+      let currentSection = "overview";
+
+      for (const id of sectionIds) {
+        const section = document.getElementById(id);
+        if (section && section.getBoundingClientRect().top + window.scrollY <= scrollPosition) {
+          currentSection = id;
+        }
+      }
+
+      // The last section can be shorter than the viewport.
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+        currentSection = "missions";
+      }
+
+      setActiveSection(currentSection);
+    };
+
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
+    updateActiveSection();
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+    };
+  }, []);
+
+  // Only the single real-world room (WP01) and inspection mission M001 are shown.
+
+  const mission = data?.missions.find((row) => row.mission_id === "M001");
+
+  // Each visible detection box gets exactly one inspection finding.
+
+  // Hazard categories are fictional demo assignments, not LiDAR measurements.
+
+  const hazardExamples: Array<{
+
+    name: string;
+
+    severity: Severity;
+
+    description: string;
+
+  }> = [
+
+    { name: "Radiation zone (simulated)", severity: "CRITICAL", description: "DEMO SCENARIO: Potential radiation hazard assigned to this detected geometric change. No radiation sensor reading was collected." },
+
+    { name: "Toxic gas zone (simulated)", severity: "CRITICAL", description: "DEMO SCENARIO: Potential gas leak assigned to this detected geometric change. No gas sensor reading was collected." },
+
+    { name: "Overheating equipment (simulated)", severity: "HIGH", description: "DEMO SCENARIO: Potential overheating equipment assigned to this detected geometric change. No temperature sensor reading was collected." },
+
+    { name: "Blocked access (simulated)", severity: "MEDIUM", description: "DEMO SCENARIO: Potential access obstruction assigned to this detected geometric change. Physical obstruction has not been verified." },
+
+    { name: "Moved equipment (simulated)", severity: "LOW", description: "DEMO SCENARIO: Potential moved equipment assigned to this detected geometric change. Requires operator review." },
+
+  ];
+
+  const roomFindings: Finding[] = (lidar?.clustered_changes ?? []).map((change, index) => {
+
+    const example = hazardExamples[index];
+
+    const severity: Severity = example?.severity ?? "LOW";
+
+    return {
+
+      anomaly_id: change.id,
+
+      mission_id: "M001",
+
+      asset_name: example?.name ?? `Geometric change ${index + 1}`,
+
+      location_id: "WP01",
+
+      location_name: "Hazardous facility room",
+
+      timestamp: mission?.start_time ?? "",
+
+      severity,
+
+      description: `${example?.description ?? "Geometric difference detected between scans; object and hazard type are unverified."} Cluster: ${change.id}. ${change.point_count.toLocaleString()} changed points. Bounding box dimensions: ${change.dimensions.x.toFixed(2)} × ${change.dimensions.y.toFixed(2)} × ${change.dimensions.z.toFixed(2)} (scan units).`,
+
+      operator_review_required: severity === "CRITICAL" || severity === "HIGH",
+
+      synthetic: true,
+
+    };
+
+  });
+
+  const findings = roomFindings.filter(
+
+    (row) =>
+
+      (!reviewOnly || row.operator_review_required) &&
+
+      (severity === "ALL" || row.severity === severity) &&
+
+      (!search.trim() || [row.anomaly_id, row.asset_name, row.location_name, row.description]
+
+        .some((value) => value.toLowerCase().includes(search.trim().toLowerCase()))),
+
+  );
+
+  const reviewCount = roomFindings.filter((row) => row.operator_review_required).length;
+
+  const highestSeverity = severities.find((level) => roomFindings.some((row) => row.severity === level)) ?? "NONE";
+
   const clusteredChange = lidar?.clustered_changes?.[0];
-  const proximity = lidar?.waypoint_proximity.find(
-    (row) => row.waypoint_id === selectedWaypoint,
-  );
-  const history = lidar?.history.find(
-    (row) => row.location_id === selectedWaypoint,
-  );
-  const findings =
-    data?.findings.filter(
-      (row) =>
-        (!reviewOnly || row.operator_review_required) &&
-        (!search.trim() ||
-          [
-            row.anomaly_id,
-            row.asset_name,
-            row.location_name,
-            row.mission_id,
-            row.description,
-          ].some((value) =>
-            value.toLowerCase().includes(search.trim().toLowerCase()),
-          )) &&
-        (severity === "ALL" || row.severity === severity) &&
-        (location === "ALL" || row.location_id === location) &&
-        (missionFilter === "ALL" || row.mission_id === missionFilter),
-    ) ?? [];
-  const missions =
-    data?.missions.filter(
-      (row) => scenario === "ALL" || row.scenario === scenario,
-    ) ?? [];
 
-  return (
+  // Legacy synthetic waypoint distances aren't registered to the current GLB.
+
+  const locationName = "Hazardous facility room";
+
+
+
+return (
+
     <div className="operations-dashboard app-shell">
-      <aside className="sidebar">
-        <a className="brand" href="#overview">
-          <span className="brand-mark">S</span>
-          <span>
-            SPOT<span className="brand-sub">FACILITY LIDAR</span>
-          </span>
-        </a>
-        <div className="nav-label">LIDAR PAGE</div>
-        <nav aria-label="Dashboard sections">
-          <button className="nav-home" type="button" onClick={onHome}>
-            <span>⌂</span>Home
-          </button>
-          <a href="#overview" className="nav-active">
-            <span>▦</span>Overview
-          </a>
-          <a href="#digital-twin">
-            <span>◇</span>Digital twin
-          </a>
-          <a href="#findings">
-            <span>◉</span>Findings
-          </a>
-          <a href="#missions">
-            <span>≡</span>Missions
-          </a>
-        </nav>
-        <div className="sidebar-footer">
-          <span className="dot amber" /> KNIGHT HACKS IX
-          <span>
-            Synthetic inspection workspace
-            <br />
-            Historical data prototype
-          </span>
-        </div>
-      </aside>
-      <div className="dashboard-content" id="overview">
-        <header className="topbar">
-          <span>
-            LiDAR <span className="slash">/</span> Facility digital twin
-          </span>
-          <span className="prototype-label">PROTOTYPE · V1</span>
-        </header>
-        <div className="page-heading">
-          <div>
-            <div className="eyebrow">INSPECTION INTELLIGENCE</div>
-            <h1>LiDAR workspace</h1>
-            <p>
-              Mission performance, historical findings, and a simulated digital
-              twin.
-            </p>
-          </div>
-          <div className="heading-actions">
-            <div className="mode-switch" aria-label="Data source">
-              <button
-                aria-pressed={mode === "demo"}
-                className={mode === "demo" ? "active" : ""}
-                onClick={() => {
-                  setLoading(true);
-                  setData(null);
-                  setSelectedFinding(null);
-                  setError("");
-                  setMode("demo");
-                }}
-              >
-                Demo data
-              </button>
-              <button
-                aria-pressed={mode === "api"}
-                className={mode === "api" ? "active" : ""}
-                onClick={() => {
-                  setLoading(true);
-                  setData(null);
-                  setSelectedFinding(null);
-                  setError("");
-                  setMode("api");
-                }}
-              >
-                Django API
-              </button>
-            </div>
-            <button
-              className="refresh-button"
-              onClick={() => {
-                setLoading(true);
-                setData(null);
-                setSelectedFinding(null);
-                setError("");
-                setRefresh((value) => value + 1);
-              }}
-              disabled={loading}
-            >
-              ↻ Refresh
-            </button>
-          </div>
-        </div>
-        <div className="source-banner">
-          <span className="badge cyan-badge">SIMULATED</span>
-          <span>
-            {mode === "demo"
-              ? "Bundled challenge snapshot"
-              : "Django inspection data"}{" "}
-            · Historical records, not live robot telemetry
-          </span>
-          <span className="source-time">
-            Latest record: {timestamp(metrics?.latest_record_at)}
-          </span>
-        </div>
-        <div className="connectivity">
-          <span>
-            <span
-              className={`dot ${mode === "api" && data ? "green" : "gray"}`}
-            />
-            Inspection API:{" "}
-            {mode === "demo"
-              ? "not queried in demo"
-              : loading
-                ? "connecting"
-                : error
-                  ? "unavailable"
-                  : "connected"}
-          </span>
-          <span>
-            <span className="dot gray" />
-            Robot sync: not configured
-          </span>
-          <span>
-            <span className="dot amber" />
-            Robot: simulated
-          </span>
-        </div>
-        {error && (
-          <div className="error-banner" role="alert">
-            {error}
-          </div>
-        )}
-        <section
-          className="metrics-grid"
-          aria-label="Inspection metrics"
-          aria-busy={loading}
-        >
-          {[
-            {
-              label: "Mission completion",
-              value: pct(metrics?.mission_completion_pct),
-              detail: metrics
-                ? `${metrics.completed_missions} of ${metrics.total_missions} missions completed`
-                : "Waiting for data",
-              icon: "↗",
-            },
-            {
-              label: "Action success",
-              value: pct(metrics?.action_success_pct),
-              detail: metrics
-                ? `${metrics.successful_actions} of ${metrics.total_actions} actions successful`
-                : "Waiting for data",
-              icon: "✓",
-            },
-            {
-              label: "Historical findings",
-              value: metrics?.total_anomalies ?? "—",
-              detail: metrics
-                ? `${metrics.total_readings} sensor readings recorded`
-                : "Waiting for data",
-              icon: "◉",
-            },
-            {
-              label: "Operator review",
-              value: metrics?.review_required_count ?? "—",
-              detail: "Source findings flagged for review",
-              icon: "⚑",
-            },
-          ].map((card, index) => (
-            <article className={`metric-card metric-${index}`} key={card.label}>
-              <div className="metric-label">
-                {card.label}
-                <span>{card.icon}</span>
-              </div>
-              <strong>{loading ? "…" : card.value}</strong>
-              <p>{card.detail}</p>
-            </article>
-          ))}
-        </section>
 
-        <section className="twin-grid" id="digital-twin">
-          <article className="panel twin-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Facility digital twin</h2>
-                <p>Simulated room geometry with historical waypoint overlays</p>
-              </div>
-              <span className="badge neutral-badge">
-                {lidar?.waypoints.length ?? "—"} WAYPOINTS
-              </span>
-            </div>
-            <div className="layer-toolbar">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={showHistory}
-                  onChange={(event) => setShowHistory(event.target.checked)}
-                />
-                Waypoint history
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={showObstruction}
-                  onChange={(event) => setShowObstruction(event.target.checked)}
-                />
-                Synthetic obstruction
-              </label>
-              <span>facility.glb</span>
-            </div>
-            {lidar ? (
-              <Suspense
-                fallback={
-                  <div className="viewer-placeholder">
-                    Preparing model viewer…
-                  </div>
-                }
-              >
-                <FacilityViewer
-                  data={lidar}
-                  selected={selectedWaypoint}
-                  onSelect={setSelectedWaypoint}
-                  showHistory={showHistory}
-                  showObstruction={showObstruction}
-                />
-              </Suspense>
-            ) : (
-              <div
-                className="viewer-placeholder"
-                role={lidarError ? "alert" : "status"}
-              >
-                {lidarError || "Loading LiDAR exports…"}
-              </div>
-            )}
-            <div className="legend">
-              {[...severities, "NONE" as Severity].map((value) => (
-                <span key={value}>
-                  <i className={`severity-dot ${value.toLowerCase()}`} />
-                  {value === "NONE"
-                    ? "No findings"
-                    : value.charAt(0) + value.slice(1).toLowerCase()}
-                </span>
-              ))}
-            </div>
-            <div className="waypoint-list" aria-label="Select a waypoint">
-              {lidar?.waypoints.map((row) => (
-                <button
-                  key={row.location_id}
-                  aria-pressed={selectedWaypoint === row.location_id}
-                  className={
-                    selectedWaypoint === row.location_id ? "selected" : ""
-                  }
-                  onClick={() => setSelectedWaypoint(row.location_id)}
-                >
-                  {row.location_id}
-                </button>
-              ))}
-            </div>
-            <p className="coordinate-note">
-              Demo-scaled waypoint positions in facility_local coordinates;
-              these are not real SPOT localization measurements.
+              <style>{`
+
+        /* Panel height is set by the neighboring info column, not by the viewer */
+
+        .twin-grid {
+
+          align-items: stretch !important;
+
+        }
+
+
+
+        .twin-grid > .twin-panel {
+
+          display: flex !important;
+
+          flex-direction: column !important;
+
+          align-self: stretch !important;
+
+          height: auto !important;
+
+          min-height: 0 !important;
+
+          padding-bottom: 0 !important;
+
+          overflow: hidden;
+
+        }
+
+
+
+        /* viewer-wrap takes whatever height is left under the toolbar */
+
+        .twin-grid > .twin-panel .viewer-wrap {
+
+          display: flex !important;
+
+          flex-direction: column !important;
+
+          flex: 1 1 0 !important;
+
+          min-height: 420px !important;   /* floor only; the column beside it sets the real height */
+
+          margin-bottom: 0 !important;
+
+          padding-bottom: 0 !important;
+
+        }
+
+
+
+        .twin-grid > .twin-panel .viewer-stage {
+
+          position: relative !important;
+
+          flex: 1 1 0 !important;
+
+          height: auto !important;
+
+          min-height: 0 !important;
+
+        }
+
+
+
+        /* The canvas host is absolute, so it never pushes the panel taller */
+
+        .twin-grid > .twin-panel .viewer-stage > .viewer {
+
+          position: absolute !important;
+
+          inset: 0 !important;
+
+          width: 100% !important;
+
+          height: 100% !important;
+
+          min-height: 0 !important;
+
+        }
+
+
+
+        .twin-grid > .twin-panel .viewer-stage canvas {
+
+          display: block;
+
+          width: 100% !important;
+
+          height: 100% !important;
+
+        }
+
+
+
+        .twin-grid > .twin-panel .viewer-label,
+
+        .twin-grid > .twin-panel .reset-view,
+
+        .twin-grid > .twin-panel .viewer-help,
+
+        .twin-grid > .twin-panel .axis-label,
+
+        .twin-grid > .twin-panel .viewer-error {
+
+          z-index: 2;
+
+        }
+
+
+
+        .twin-grid > .twin-panel .marker-toolbar,
+
+        .twin-grid > .twin-panel .coordinate-note {
+
+          display: none !important;
+
+        }
+
+      `}</style>
+
+      <aside className="sidebar">
+
+        <a className="brand" href="#overview">
+
+          <span className="brand-mark">S</span>
+
+          <span>
+
+            SPOT<span className="brand-sub">FACILITY LIDAR</span>
+
+          </span>
+
+        </a>
+
+        <div className="nav-label">LIDAR PAGE</div>
+
+        <nav aria-label="Dashboard sections">
+
+          <button className="nav-home" type="button" onClick={onHome}>
+
+            <span>⌂</span>Home
+
+          </button>
+
+          <a href="#overview" className={activeSection === "overview" ? "nav-active" : ""}>
+
+            <span>▦</span>Overview
+
+          </a>
+
+          <a href="#digital-twin" className={activeSection === "digital-twin" ? "nav-active" : ""}>
+
+            <span>◇</span>Digital twin
+
+          </a>
+
+          <a href="#findings" className={activeSection === "findings" ? "nav-active" : ""}>
+
+            <span>◉</span>Findings
+
+          </a>
+
+          <a href="#missions" className={activeSection === "missions" ? "nav-active" : ""}>
+
+            <span>≡</span>Missions
+
+          </a>
+
+        </nav>
+
+        <div className="sidebar-footer">
+
+          <span className="dot amber" /> KNIGHT HACKS IX
+
+          <span>
+
+            Facility inspection workspace
+
+            <br />
+
+            Single-room inspection
+
+          </span>
+
+        </div>
+
+      </aside>
+
+      <div className="dashboard-content" id="overview">
+
+        <header className="topbar">
+
+          <span>
+
+            LiDAR <span className="slash">/</span> Facility digital twin
+
+          </span>
+
+
+
+        </header>
+
+        <div className="page-heading">
+
+          <div>
+
+            <div className="eyebrow">INSPECTION INTELLIGENCE</div>
+
+            <h1>LiDAR workspace</h1>
+
+            <p>
+
+              One-room inspection · mission M001.
+
             </p>
-          </article>
-          <div className="twin-details">
-            <article className="panel waypoint-panel">
-              <div className="eyebrow">SELECTED WAYPOINT</div>
-              <div className="waypoint-title">
-                <h2>{selectedWaypoint}</h2>
-                <span
-                  className={`badge severity ${history?.highest_severity?.toLowerCase() ?? "none"}`}
-                >
-                  {history?.highest_severity ?? "—"}
-                </span>
-              </div>
-              <p>
-                {data?.findings.find(
-                  (row) => row.location_id === selectedWaypoint,
-                )?.location_name ?? "Synthetic facility waypoint"}
-              </p>
-              <div className="waypoint-stat">
-                <strong>
-                  {proximity?.distance_m != null
-                    ? `${proximity.distance_m.toFixed(3)} m`
-                    : "—"}
-                </strong>
-                <span>
-                  Distance to nearest
-                  <br />
-                  obstruction
-                </span>
-              </div>
-              <p>
-                <strong>Proximity status: </strong>
-                {proximity?.status === "NEAR_OBSTRUCTION"
-                  ? "Near obstruction"
-                  : proximity?.status === "CAUTION"
-                    ? "Caution"
-                    : proximity?.status === "CLEAR"
-                      ? "Clear"
-                      : "Unavailable"}
-              </p>
-              <div className="waypoint-stat">
-                <strong>{history?.anomaly_count ?? "—"}</strong>
-                <span>
-                  historical findings
-                  <br />
-                  across all missions
-                </span>
-              </div>
-              <div className="mini-bars">
-                {severities.map((level) => {
-                  const count =
-                    data?.findings.filter(
-                      (row) =>
-                        row.location_id === selectedWaypoint &&
-                        row.severity === level,
-                    ).length ?? 0;
-                  return (
-                    <div key={level}>
-                      <span>{level.toLowerCase()}</span>
-                      <div className="bar-track">
-                        <i
-                          className={level.toLowerCase()}
-                          style={{
-                            width: `${(count / Math.max(history?.anomaly_count ?? 1, 1)) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <b>{data ? count : "—"}</b>
-                    </div>
-                  );
-                })}
-              </div>
-              <button
-                className="text-button"
-                onClick={() => {
-                  setSearch("");
-                  setReviewOnly(false);
-                  setLocation(selectedWaypoint);
-                  setMissionFilter("ALL");
-                  setSeverity("ALL");
-                  document
-                    .getElementById("findings")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                View waypoint findings →
-              </button>
-            </article>
-            <article className="panel obstruction-panel">
-              <div className="eyebrow">POINT CLOUD COMPARISON</div>
-              <h2>
-                <span className="dot red" />
-                ICP + DBSCAN Detection
-              </h2>
-              <p>
-                Geometric changes detected after ICP alignment and DBSCAN
-                clustering of synthetic scans.
-              </p>
-              <dl>
-                <div>
-                  <dt>Change ID</dt>
-                  <dd>{clusteredChange?.id ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt>Changed points</dt>
-                  <dd>
-                    {clusteredChange?.point_count?.toLocaleString() ?? "—"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Clusters detected</dt>
-                  <dd>{lidar?.clustered_changes.length ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt>Review status</dt>
-                  <dd>{clusteredChange?.review_status ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt>AI confidence</dt>
-                  <dd>Unavailable</dd>
-                </div>
-              </dl>
-              <p className="tiny-note">
-                Synthetic ICP-aligned point-cloud comparison with DBSCAN
-                clustering. These geometric changes are separate from the 40
-                historical challenge findings. No AI confidence score was
-                supplied.
-              </p>
-            </article>
+
           </div>
+
+                    </div>
+
+{error && (
+
+          <div className="error-banner" role="alert">
+
+            {error}
+
+          </div>
+
+        )}
+
+                  <section className="metrics-grid" aria-label="Inspection metrics" aria-busy={loading}>
+
+            {[
+
+              { label: "Mission", value: mission?.mission_id ?? "—", detail: mission?.mission_status ?? "No M001 record", icon: "↗" },
+
+              { label: "Action success", value: mission ? pct(((mission.total_actions - mission.failed_actions) / Math.max(mission.total_actions, 1)) * 100) : "—", detail: mission ? `${mission.total_actions - mission.failed_actions} of ${mission.total_actions} actions successful` : "No mission data", icon: "✓" },
+
+              { label: "Inspection findings", value: roomFindings.length, detail: "One finding per displayed change box", icon: "◉" },
+
+              { label: "Operator review", value: reviewCount, detail: "Findings flagged for review", icon: "⚑" },
+
+            ].map((card, index) => (
+
+              <article className={`metric-card metric-${index}`} key={card.label}>
+
+                <div className="metric-label">{card.label}<span>{card.icon}</span></div>
+
+                <strong>{loading ? "…" : card.value}</strong>
+
+                <p>{card.detail}</p>
+
+              </article>
+
+            ))}
+
+          </section>
+
+
+
+<section className="twin-grid" id="digital-twin">
+
+          <article className="panel twin-panel">
+
+            <div className="panel-heading">
+
+              <div>
+
+                <h2>Facility digital twin</h2>
+
+                <p>Updated facility scan · WP01</p>
+
+              </div>
+
+              <span className="badge neutral-badge">
+
+                WP01
+
+              </span>
+
+            </div>
+
+            <div className="layer-toolbar">
+
+              <label>
+
+                <input
+
+                  type="checkbox"
+
+                  checked={showObstruction}
+
+                  onChange={(event) => setShowObstruction(event.target.checked)}
+
+                />
+
+                Detected changes
+
+              </label>
+
+              <span>update_room_hazard.glb</span>
+
+            </div>
+
+            {lidar ? (
+
+              <Suspense
+
+                fallback={
+
+                  <div className="viewer-placeholder">
+
+                    Preparing model viewer…
+
+                  </div>
+
+                }
+
+              >
+
+                <FacilityViewer
+
+                  data={lidar}
+
+                  selected={selectedWaypoint}
+
+                  onSelect={() => {}}
+
+                  showHistory={showHistory}
+
+                  showObstruction={showObstruction}
+
+                />
+
+              </Suspense>
+
+            ) : (
+
+              <div
+
+                className="viewer-placeholder"
+
+                role={lidarError ? "alert" : "status"}
+
+              >
+
+                {lidarError || "Loading LiDAR exports…"}
+
+              </div>
+
+            )}
+
+            </article>
+
+            <div className="twin-details">
+
+                          <article className="panel waypoint-panel">
+
+                <div className="eyebrow">FACILITY LOCATION</div>
+
+                <div className="waypoint-title">
+
+                  <h2>WP01</h2>
+
+                  <span className={`badge severity ${highestSeverity.toLowerCase()}`}>{highestSeverity}</span>
+
+                </div>
+
+                <p>{locationName}</p>
+
+                <div className="waypoint-stat">
+
+                  <strong>{roomFindings.length}</strong>
+
+                  <span>inspection findings<br />for M001</span>
+
+                </div>
+
+                <div className="mini-bars">
+
+                  {severities.map((level) => {
+
+                    const count = roomFindings.filter((row) => row.severity === level).length;
+
+                    return (
+
+                      <div key={level}>
+
+                        <span>{level.toLowerCase()}</span>
+
+                        <div className="bar-track">
+
+                          <i className={level.toLowerCase()} style={{ width: `${(count / Math.max(roomFindings.length, 1)) * 100}%` }} />
+
+                        </div>
+
+                        <b>{count}</b>
+
+                      </div>
+
+                    );
+
+                  })}
+
+                </div>
+
+                <button className="text-button" onClick={() => document.getElementById("findings")?.scrollIntoView({ behavior: "smooth" })}>
+
+                  View inspection findings →
+
+                </button>
+
+              </article>
+
+<article className="panel obstruction-panel">
+
+              <div className="eyebrow">POINT CLOUD COMPARISON</div>
+
+              <h2>
+
+                <span className="dot red" />
+
+                ICP + DBSCAN Detection
+
+              </h2>
+
+              <p>
+
+                Geometric changes detected using ICP alignment and DBSCAN clustering of room scans.
+
+              </p>
+
+              <dl>
+
+                <div>
+
+                  <dt>Change ID</dt>
+
+                  <dd>{clusteredChange?.id ?? "—"}</dd>
+
+                </div>
+
+                <div>
+
+                  <dt>Changed points</dt>
+
+                  <dd>
+
+                    {clusteredChange?.point_count?.toLocaleString() ?? "—"}
+
+                  </dd>
+
+                </div>
+
+                <div>
+
+                  <dt>Clusters detected</dt>
+
+                  <dd>{lidar?.clustered_changes.length ?? "—"}</dd>
+
+                </div>
+
+                <div>
+
+                  <dt>Review status</dt>
+
+                  <dd>{clusteredChange?.review_status ?? "—"}</dd>
+
+                </div>
+
+                <div>
+
+                  <dt>AI confidence</dt>
+
+                  <dd>Unavailable</dd>
+
+                </div>
+
+              </dl>
+
+                              <p className="tiny-note">
+
+                  Each detected box is listed as a finding for WP01 / M001. Hazard scenarios are fictional; the scan cannot measure radiation, gas, or temperature.
+
+</p>
+
+            </article>
+
+          </div>
+
         </section>
 
         <section className="panel findings-panel" id="findings">
+
           <div className="panel-heading">
+
             <div>
+
               <h2>
+
                 Inspection findings{" "}
+
                 <span className="count-pill">{findings.length}</span>
+
               </h2>
-              <p>Recorded anomalies from the synthetic challenge dataset</p>
+
+              <p>WP01 · M001 · one simulated finding per detected change box</p>
+
             </div>
+
             <div className="filters">
+
               <label>
+
                 Severity
+
                 <select
+
                   value={severity}
+
                   onChange={(event) => setSeverity(event.target.value)}
+
                 >
+
                   <option value="ALL">All severities</option>
+
                   {severities.map((value) => (
+
                     <option key={value}>{value}</option>
+
                   ))}
+
                 </select>
+
               </label>
-              <label>
-                Waypoint
-                <select
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                >
-                  <option value="ALL">All waypoints</option>
-                  {lidar?.waypoints.map((row) => (
-                    <option key={row.location_id}>{row.location_id}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Mission
-                <select
-                  value={missionFilter}
-                  onChange={(event) => setMissionFilter(event.target.value)}
-                >
-                  <option value="ALL">All missions</option>
-                  {data?.missions.map((row) => (
-                    <option key={row.mission_id}>{row.mission_id}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
+
+              </div>
+
           </div>
+
           <div className="finding-search">
+
             <label>
+
               Search findings
+
               <input
+
                 type="search"
+
                 value={search}
-                placeholder="Asset, mission, location or description"
+
+                placeholder="Asset or description"
+
                 onChange={(event) => setSearch(event.target.value)}
+
               />
+
             </label>
+
             <label className="review-toggle">
+
               <input
+
                 type="checkbox"
+
                 checked={reviewOnly}
+
                 onChange={(event) => setReviewOnly(event.target.checked)}
+
               />{" "}
+
               Review required only
+
             </label>
+
             <button
+
               className="refresh-button"
+
               onClick={() => {
+
                 setSearch("");
+
                 setReviewOnly(false);
+
                 setSeverity("ALL");
-                setLocation("ALL");
-                setMissionFilter("ALL");
+
               }}
+
             >
+
               Clear filters
+
             </button>
+
           </div>
+
           <div className="table-scroll">
+
             <table>
+
               <thead>
+
                 <tr>
+
                   <th>Finding / Asset</th>
+
                   <th>Location</th>
+
                   <th>Severity</th>
-                  <th>Recorded at</th>
+
+                  <th>Demo mission time</th>
+
                   <th>Review</th>
+
                   <th aria-label="Details"></th>
+
                 </tr>
+
               </thead>
+
               <tbody>
+
                 {(showAllFindings ? findings : findings.slice(0, 6)).map(
+
                   (row) => (
+
                     <tr key={row.anomaly_id}>
+
                       <td>
+
                         <strong>{row.asset_name}</strong>
+
                         <small>
+
                           {row.anomaly_id} · {row.mission_id}
+
                         </small>
+
                       </td>
+
                       <td>
+
                         {row.location_name}
+
                         <small>{row.location_id}</small>
+
                       </td>
+
                       <td>
+
                         <span
+
                           className={`badge severity ${row.severity.toLowerCase()}`}
+
                         >
+
                           {row.severity}
+
                         </span>
+
                       </td>
+
                       <td className="table-time">{timestamp(row.timestamp)}</td>
+
                       <td>
+
                         {row.operator_review_required ? (
+
                           <span className="review-required">Required</span>
+
                         ) : (
+
                           "Not flagged"
+
                         )}
+
                       </td>
+
                       <td>
+
                         <button
+
                           className="detail-button"
+
                           onClick={() => setSelectedFinding(row)}
+
                           aria-label={`View ${row.anomaly_id}`}
+
                         >
+
                           ↗
+
                         </button>
+
                       </td>
+
                     </tr>
+
                   ),
+
                 )}
+
               </tbody>
+
             </table>
+
           </div>
+
           {!findings.length && (
+
             <div className="empty-state">
+
               {loading
+
                 ? "Loading findings…"
+
                 : error
+
                   ? "Findings unavailable until the data source reconnects."
+
                   : "No findings match these filters."}
+
             </div>
+
           )}
+
           {findings.length > 6 && (
+
             <button
+
               className="table-footer"
+
               onClick={() => setShowAllFindings((value) => !value)}
+
             >
+
               {showAllFindings
+
                 ? "Show fewer findings ↑"
+
                 : `View all ${findings.length} findings ↓`}
+
             </button>
+
           )}
+
         </section>
 
         <section className="bottom-grid" id="missions">
+
           <article className="panel missions-panel">
+
             <div className="panel-heading">
+
               <div>
+
                 <h2>Mission log</h2>
+
                 <p>Completion and action failures remain separate</p>
+
               </div>
-              <label className="filters">
-                Scenario
-                <select
-                  value={scenario}
-                  onChange={(event) => setScenario(event.target.value)}
-                >
-                  <option value="ALL">All scenarios</option>
-                  <option>BASELINE</option>
-                  <option>IMPROVED</option>
-                </select>
-              </label>
-            </div>
-            <div className="table-scroll">
+
+              </div>
+
+              <div className="table-scroll">
+
               <table>
+
                 <thead>
+
                   <tr>
+
                     <th>Mission</th>
+
                     <th>Outcome</th>
+
                     <th>Duration</th>
+
                     <th>Failed actions</th>
+
                     <th>Battery used</th>
+
                   </tr>
+
                 </thead>
+
                 <tbody>
-                  {(showAllMissions ? missions : missions.slice(0, 5)).map(
-                    (row) => (
-                      <tr key={row.mission_id}>
-                        <td>
-                          <button
-                            className="mission-link"
-                            onClick={() => {
-                              setSearch("");
-                              setReviewOnly(false);
-                              setSeverity("ALL");
-                              setMissionFilter(row.mission_id);
-                              setLocation("ALL");
-                              document
-                                .getElementById("findings")
-                                ?.scrollIntoView({ behavior: "smooth" });
-                            }}
-                          >
-                            {row.mission_id} ↗
-                          </button>
-                          <small>{row.scenario}</small>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${row.mission_status === "COMPLETED" ? "cyan-badge" : "severity critical"}`}
-                          >
-                            {row.mission_status}
-                          </span>
-                        </td>
-                        <td>{row.duration_min} min</td>
-                        <td>
-                          {row.failed_actions} / {row.total_actions}
-                        </td>
-                        <td>{row.battery_used_pct} pp</td>
-                      </tr>
-                    ),
+
+                                    {mission && (
+
+                    <tr key={mission.mission_id}>
+
+                      <td><strong>{mission.mission_id}</strong></td>
+
+                      <td><span className={`badge ${mission.mission_status === "COMPLETED" ? "cyan-badge" : "severity critical"}`}>{mission.mission_status}</span></td>
+
+                      <td>{mission.duration_min} min</td>
+
+                      <td>{mission.failed_actions} / {mission.total_actions}</td>
+
+                      <td>{mission.battery_used_pct} pp</td>
+
+                    </tr>
+
                   )}
-                </tbody>
+
+</tbody>
+
               </table>
+
             </div>
-            {!missions.length && (
+
+            {!mission && (
+
               <div className="empty-state">
+
                 {loading ? "Loading missions…" : "No missions available."}
+
               </div>
+
             )}
-            {missions.length > 5 && (
-              <button
-                className="table-footer"
-                onClick={() => setShowAllMissions((value) => !value)}
-              >
-                {showAllMissions
-                  ? "Show fewer missions ↑"
-                  : `View all ${missions.length} missions ↓`}
-              </button>
-            )}
-          </article>
-          <article className="panel comparison-panel">
-            <div className="eyebrow">CONFIGURATION COMPARISON</div>
-            <h2>Baseline → Improved</h2>
-            <p>Observed results in fictional V1 / V2 scenarios</p>
-            {["mission_completion_pct", "action_success_pct"].map((key) => (
-              <div className="comparison-row" key={key}>
-                <span>
-                  {key === "mission_completion_pct"
-                    ? "Mission completion"
-                    : "Action success"}
-                </span>
-                <div>
-                  <strong>
-                    {pct(
-                      metrics?.by_scenario?.BASELINE?.[
-                        key as "mission_completion_pct" | "action_success_pct"
-                      ],
-                    )}
-                  </strong>
-                  <span>→</span>
-                  <strong className="improved">
-                    {pct(
-                      metrics?.by_scenario?.IMPROVED?.[
-                        key as "mission_completion_pct" | "action_success_pct"
-                      ],
-                    )}
-                  </strong>
-                </div>
-              </div>
-            ))}
-            <p className="tiny-note">
-              The dataset does not specify what changed between configurations.
-              This comparison does not establish causation.
-            </p>
-          </article>
-        </section>
-        <footer className="page-footer">
-          Knight Hacks IX · Synthetic LiDAR workspace{" "}
-          <span>Historical data prototype</span>
-        </footer>
-      </div>
-      {selectedFinding && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setSelectedFinding(null)}
-        >
-          <section
-            className="finding-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="finding-title"
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") setSelectedFinding(null);
-            }}
-          >
-            <button
-              autoFocus
-              className="close-dialog"
-              aria-label="Close finding details"
-              onClick={() => setSelectedFinding(null)}
-            >
-              ×
-            </button>
-            <div className="eyebrow">
-              SYNTHETIC FINDING · {selectedFinding.anomaly_id}
-            </div>
-            <h2 id="finding-title">{selectedFinding.asset_name}</h2>
-            <span
-              className={`badge severity ${selectedFinding.severity.toLowerCase()}`}
-            >
-              {selectedFinding.severity}
-            </span>
-            <p>{selectedFinding.description}</p>
-            <dl>
-              <div>
-                <dt>Location</dt>
-                <dd>
-                  {selectedFinding.location_name} /{" "}
-                  {selectedFinding.location_id}
-                </dd>
-              </div>
-              <div>
-                <dt>Mission</dt>
-                <dd>{selectedFinding.mission_id}</dd>
-              </div>
-              <div>
-                <dt>Recorded</dt>
-                <dd>{timestamp(selectedFinding.timestamp)}</dd>
-              </div>
-              <div>
-                <dt>Operator review</dt>
-                <dd>
-                  {selectedFinding.operator_review_required
-                    ? "Required"
-                    : "Not flagged"}
-                </dd>
-              </div>
-            </dl>
-            <p className="tiny-note">
-              Review decisions are not saved in this prototype.
-            </p>
-            <button
-              className="refresh-button"
-              onClick={() => setSelectedFinding(null)}
-            >
-              Close details
-            </button>
+
+            </article>
+
           </section>
+
+        <footer className="page-footer">
+
+          Knight Hacks IX · Facility inspection{" "}
+
+          <span>Simulated inspection data</span>
+
+        </footer>
+
+      </div>
+
+      {selectedFinding && (
+
+        <div
+
+          className="modal-backdrop"
+
+          onClick={() => setSelectedFinding(null)}
+
+        >
+
+          <section
+
+            className="finding-dialog"
+
+            role="dialog"
+
+            aria-modal="true"
+
+            aria-labelledby="finding-title"
+
+            onClick={(event) => event.stopPropagation()}
+
+            onKeyDown={(event) => {
+
+              if (event.key === "Escape") setSelectedFinding(null);
+
+            }}
+
+          >
+
+            <button
+
+              autoFocus
+
+              className="close-dialog"
+
+              aria-label="Close finding details"
+
+              onClick={() => setSelectedFinding(null)}
+
+            >
+
+              ×
+
+            </button>
+
+            <div className="eyebrow">
+
+              SIMULATED FINDING · {selectedFinding.anomaly_id}
+
+            </div>
+
+            <h2 id="finding-title">{selectedFinding.asset_name}</h2>
+
+            <span
+
+              className={`badge severity ${selectedFinding.severity.toLowerCase()}`}
+
+            >
+
+              {selectedFinding.severity}
+
+            </span>
+
+            <p>{selectedFinding.description}</p>
+
+            <dl>
+
+              <div>
+
+                <dt>Location</dt>
+
+                <dd>
+
+                  {selectedFinding.location_name} /{" "}
+
+                  {selectedFinding.location_id}
+
+                </dd>
+
+              </div>
+
+              <div>
+
+                <dt>Mission</dt>
+
+                <dd>{selectedFinding.mission_id}</dd>
+
+              </div>
+
+              <div>
+
+                <dt>Recorded</dt>
+
+                <dd>{timestamp(selectedFinding.timestamp)}</dd>
+
+              </div>
+
+              <div>
+
+                <dt>Operator review</dt>
+
+                <dd>
+
+                  {selectedFinding.operator_review_required
+
+                    ? "Required"
+
+                    : "Not flagged"}
+
+                </dd>
+
+              </div>
+
+            </dl>
+
+            <p className="tiny-note">
+
+              Review decisions are not saved in this dashboard.
+
+            </p>
+
+            <button
+
+              className="refresh-button"
+
+              onClick={() => setSelectedFinding(null)}
+
+            >
+
+              Close details
+
+            </button>
+
+          </section>
+
         </div>
+
       )}
+
     </div>
+
   );
+
 }
 
 export default Dashboard;
