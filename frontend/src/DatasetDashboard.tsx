@@ -970,8 +970,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
     <div className="dataset-dashboard">
       <aside className="dataset-rail">
         <button type="button" className="dataset-brand" onClick={onHome}>
-          <span>S</span>
-          <strong>SPOT</strong>
+          <strong>SPOTLIGHT</strong>
         </button>
         <section className="selection-rail" aria-label="Current search selection">
           <p>Current selection</p>
