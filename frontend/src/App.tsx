@@ -6,6 +6,7 @@ import {
   Boxes,
   ClipboardCheck,
   GitCompareArrows,
+  Home,
   Map,
   Play,
   Radar,
@@ -29,6 +30,8 @@ type Capability = {
   target: string;
   icon: LucideIcon;
 };
+
+type Page = "landing" | "lidar" | "dashboard" | "relay" | "summary";
 
 const capabilities: Capability[] = [
   {
@@ -88,9 +91,7 @@ const capabilities: Capability[] = [
 ];
 
 export default function App() {
-  const [page, setPage] = useState<
-    "landing" | "lidar" | "dashboard" | "relay" | "summary"
-  >(() => {
+  const [page, setPage] = useState<Page>(() => {
     if (
       window.location.pathname === "/summary" ||
       window.location.hash === "#summary" ||
@@ -121,7 +122,11 @@ export default function App() {
       if (window.location.hash === "#lidar") setPage("lidar");
       if (window.location.hash === "#dashboard") setPage("dashboard");
       if (window.location.hash === "#relay") setPage("relay");
-      if (window.location.hash === "#top" || (window.location.pathname === "/" && !window.location.hash)) setPage("landing");
+      if (
+        window.location.hash === "#top" ||
+        (window.location.pathname === "/" && !window.location.hash)
+      )
+        setPage("landing");
     };
 
     window.addEventListener("hashchange", syncRoute);
@@ -156,9 +161,12 @@ export default function App() {
     }, 0);
   };
 
-  const openRelayPage = () => {
+  const openRelayPage = (missionId?: string) => {
     setPage("relay");
-    window.history.pushState(null, "", "/relay");
+    const query = missionId
+      ? `?mission_id=${encodeURIComponent(missionId)}`
+      : "";
+    window.history.pushState(null, "", `/relay${query}`);
     window.setTimeout(() => {
       document.getElementById("relay")?.scrollIntoView();
     }, 0);
@@ -183,27 +191,90 @@ export default function App() {
     );
   }
 
+  const navItems: {
+    page: Page;
+    label: string;
+    icon: LucideIcon;
+    onClick: () => void;
+  }[] = [
+    { page: "landing", label: "Home", icon: Home, onClick: openLandingPage },
+    {
+      page: "dashboard",
+      label: "Dashboard",
+      icon: BarChart3,
+      onClick: openDashboardPage,
+    },
+    { page: "relay", label: "Replay", icon: Play, onClick: openRelayPage },
+    {
+      page: "lidar",
+      label: "LiDAR",
+      icon: Radar,
+      onClick: () => openLidarPage(),
+    },
+  ];
+
+  const appNav = (
+    <nav className="app-nav" aria-label="Primary navigation">
+      <div className="app-nav-inner">
+        <div className="app-nav-links">
+          {navItems.map((item) => {
+            const NavIcon = item.icon;
+            return (
+              <button
+                type="button"
+                className={`app-nav-link ${page === item.page ? "active" : ""}`}
+                key={item.page}
+                onClick={item.onClick}
+                aria-current={page === item.page ? "page" : undefined}
+              >
+                <NavIcon aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </nav>
+  );
+
   if (page === "lidar") {
     return (
-      <main className="lidar-page" id="lidar">
-        <Dashboard onHome={openLandingPage} />
-      </main>
+      <>
+        {appNav}
+        <main className="lidar-page" id="lidar">
+          <Dashboard onHome={openLandingPage} />
+        </main>
+      </>
     );
   }
 
   if (page === "dashboard") {
     return (
-      <main className="dataset-page" id="dashboard">
-        <DatasetDashboard onHome={openLandingPage} />
-      </main>
+      <>
+        {appNav}
+        <main className="dataset-page" id="dashboard">
+          <DatasetDashboard
+            onHome={openLandingPage}
+            onOpenReplay={openRelayPage}
+          />
+        </main>
+      </>
     );
   }
 
   if (page === "relay") {
     return (
-      <main className="relay-route" id="relay">
-        <RelayPage onHome={openLandingPage} />
-      </main>
+      <>
+        {appNav}
+        <main className="relay-route" id="relay">
+          <RelayPage
+            initialMissionId={
+              new URLSearchParams(window.location.search).get("mission_id") ??
+              undefined
+            }
+          />
+        </main>
+      </>
     );
   }
 

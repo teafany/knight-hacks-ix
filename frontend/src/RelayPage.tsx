@@ -9,7 +9,7 @@ import "./RelayPage.css";
 type CsvRow = Record<string, string>;
 
 type RelayPageProps = {
-  onHome?: () => void;
+  initialMissionId?: string;
 };
 
 type ReplayEvent = {
@@ -439,8 +439,10 @@ function buildTimelineMoments(
   });
 }
 
-function RelayPage({ onHome }: RelayPageProps) {
-  const [selectedMissionId, setSelectedMissionId] = useState("M001");
+function RelayPage({ initialMissionId }: RelayPageProps) {
+  const [selectedMissionId, setSelectedMissionId] = useState(
+    () => initialMissionId ?? "M001",
+  );
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(30);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -628,32 +630,13 @@ function RelayPage({ onHome }: RelayPageProps) {
 
   return (
     <div className="relay-page">
-      <header className="relay-topbar">
-        <button type="button" className="relay-brand" onClick={onHome}>
-          <span>S</span>
-          <strong>Relay</strong>
-        </button>
-        <label className="relay-select">
-          <span>Path</span>
-          <select
-            value={selectedMissionId}
-            onChange={(event) => setSelectedMissionId(event.target.value)}
-          >
-            {missions.map((mission) => (
-              <option key={mission.mission_id} value={mission.mission_id}>
-                {mission.mission_id} - {mission.mission_name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </header>
-
       <main className="relay-layout">
+        <h1 className="relay-page-title">Replay Mission</h1>
         <section className="relay-stage" aria-label="Selected mission replay">
           <div className="relay-stage-heading">
             <div>
               <p className="relay-kicker">Replay NDJSON</p>
-              <h1>{selectedMission?.mission_name ?? selectedMissionId}</h1>
+              <h2>{selectedMission?.mission_name ?? selectedMissionId}</h2>
             </div>
             <div className="relay-clock">
               <strong>{formatDuration(elapsedSeconds)}</strong>
@@ -826,6 +809,19 @@ function RelayPage({ onHome }: RelayPageProps) {
           }`}
           aria-label="Mission event timeline"
         >
+          <label className="relay-timeline-select">
+            <span>Replay path</span>
+            <select
+              value={selectedMissionId}
+              onChange={(event) => setSelectedMissionId(event.target.value)}
+            >
+              {missions.map((mission) => (
+                <option key={mission.mission_id} value={mission.mission_id}>
+                  {mission.mission_id} - {mission.mission_name}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="relay-timeline-heading">
             <div>
               <h2 className="relay-panel-title">Timeline</h2>
