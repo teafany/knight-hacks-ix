@@ -51,7 +51,8 @@ export async function loadLidar(signal: AbortSignal): Promise<LidarData> {
     getJSON<LidarData["history"]>("/lidar/waypoint_anomalies.json", signal),
     getJSON<LidarData["obstruction"]>("/lidar/anomalies.json", signal),
     getJSON<LidarData["clustered_changes"]>(
-      "/lidar/clustered_changes.json",
+      // "/lidar/clustered_changes.json",
+      "/lidar/real_clustered_changes.json",
       signal,
     ),
     getJSON<LidarData["waypoint_proximity"]>(

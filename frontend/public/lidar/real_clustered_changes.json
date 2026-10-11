@@ -1,0 +1,87 @@
+[
+  {
+    "id": "real_change_002",
+    "type": "new_geometry",
+    "source": "iphone14pro_polycam",
+    "position": {
+      "x": -2.01429878108814,
+      "y": -0.8077264688352235,
+      "z": -0.46935903302142
+    },
+    "dimensions": {
+      "x": 0.5814540500856746,
+      "y": 1.0548349581804328,
+      "z": 0.5940094389201924
+    },
+    "point_count": 386,
+    "review_status": "unreviewed"
+  },
+  {
+    "id": "real_change_007",
+    "type": "new_geometry",
+    "source": "iphone14pro_polycam",
+    "position": {
+      "x": 0.5958591967923563,
+      "y": -0.594357784536683,
+      "z": -5.377579480520344
+    },
+    "dimensions": {
+      "x": 0.6544951653080603,
+      "y": 1.2756686074627464,
+      "z": 0.20650177183024088
+    },
+    "point_count": 111,
+    "review_status": "unreviewed"
+  },
+  {
+    "id": "real_change_008",
+    "type": "new_geometry",
+    "source": "iphone14pro_polycam",
+    "position": {
+      "x": 1.2695107442541533,
+      "y": -1.1981736051814216,
+      "z": 2.2124467246496575
+    },
+    "dimensions": {
+      "x": 0.5772126859305182,
+      "y": 0.5348965482636412,
+      "z": 0.6022654262943519
+    },
+    "point_count": 205,
+    "review_status": "unreviewed"
+  },
+  {
+    "id": "real_change_016",
+    "type": "new_geometry",
+    "source": "iphone14pro_polycam",
+    "position": {
+      "x": -1.2454414682665111,
+      "y": -0.6516603087701792,
+      "z": 4.078661816158026
+    },
+    "dimensions": {
+      "x": 0.8726016412683788,
+      "y": 0.7771297653902656,
+      "z": 0.49653915396039094
+    },
+    "point_count": 269,
+    "review_status": "unreviewed"
+  },
+  {
+    "id": "real_change_026",
+    "type": "new_geometry",
+    "source": "iphone14pro_polycam",
+    "position": {
+      "x": -1.4195189873993037,
+      "y": 0.21095460354763224,
+      "z": 5.038179683326074
+    },
+    "dimensions": {
+      "x": 0.4977754241441328,
+      "y": 1.2996408687851022,
+      "z": 0.47966180072522135
+    },
+    "point_count": 134,
+    "review_status": "unreviewed"
+  }
+]

@@ -60,8 +60,8 @@ export default function FacilityViewer({
     scene.background = new THREE.Color("#0b1822");
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
     // Both the facility and waypoint exports use Z-up coordinates.
-    camera.up.set(0, 0, 1);
-    camera.position.set(8.5, 10, 8);
+    camera.up.set(0, 1, 0);
+    camera.position.set(12, 7, 12);
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -86,17 +86,34 @@ export default function FacilityViewer({
     host.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(2.5, 2, 0.6);
+    controls.target.set(0, 0, 0);
     controls.enableDamping = true;
     controls.maxDistance = 22;
     controls.minDistance = 3;
     controls.update();
 
-    const grid = new THREE.GridHelper(12, 24, "#264858", "#183440");
-    grid.rotation.x = Math.PI / 2;
-    grid.position.set(2.5, 2, -0.025);
+    // const grid = new THREE.GridHelper(12, 24, "#264858", "#183440");
+    // grid.rotation.x = Math.PI / 2;
+    // grid.position.set(2.5, 2, -0.025);
+    // scene.add(grid);
+    const grid = new THREE.GridHelper(14, 28, "#264858", "#183440");
+    // Real Polycam scan uses Y-up
+    grid.position.set(0, -1.8, 0);
     scene.add(grid);
-    scene.add(new THREE.AmbientLight(0xffffff, 2));
+    
+    // Bright, even lighting for the Polycam room scan
+    scene.add(new THREE.AmbientLight(0xffffff, 3));
+
+    const hemisphereLight = new THREE.HemisphereLight(
+    0xffffff,
+    0x888888,
+    3
+  );
+  scene.add(hemisphereLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
+  directionalLight.position.set(5, 10, 5);
+  scene.add(directionalLight);
 
     const markers = new THREE.Group();
     for (const waypoint of data.waypoints) {
@@ -126,9 +143,23 @@ export default function FacilityViewer({
         proximityColors[proximity?.status ?? ""] ?? "#7c94aa";
       markers.add(marker);
     }
+    // scene.add(markers);
+    // Hide synthetic waypoints in real scan mode
+    markers.visible = false;
     scene.add(markers);
 
     const obstruction = new THREE.Group();
+    // for (const change of data.clustered_changes) {
+    //   const geometry = new THREE.BoxGeometry(
+    //     Math.max(change.dimensions.x, 0.01),
+    //     Math.max(change.dimensions.y, 0.01),
+    //     Math.max(change.dimensions.z, 0.01),
+    //   );
+    console.log(
+    "Clusters loaded:",
+    data.clustered_changes.length,
+    data.clustered_changes.map((c) => c.id)
+  );
     for (const change of data.clustered_changes) {
       const geometry = new THREE.BoxGeometry(
         Math.max(change.dimensions.x, 0.01),
@@ -138,17 +169,17 @@ export default function FacilityViewer({
       const box = new THREE.Mesh(
         geometry,
         new THREE.MeshBasicMaterial({
-          color: "#ff6a72",
-          transparent: true,
-          opacity: 0.25,
-          depthWrite: false,
-          depthTest: false,
+        color: "#ffcc33",
+        transparent: true,
+        opacity: 0.12,
+        depthWrite: false,
+        depthTest: true,
         }),
       );
       box.renderOrder = 3;
       const edges = new THREE.LineSegments(
         new THREE.EdgesGeometry(geometry),
-        new THREE.LineBasicMaterial({ color: "#ff6a72", depthTest: false }),
+        new THREE.LineBasicMaterial({ color: "#ff6a72", depthTest: true }),
       );
       edges.renderOrder = 4;
       const clusterGroup = new THREE.Group();
@@ -165,42 +196,38 @@ export default function FacilityViewer({
     scene.add(obstruction);
     sceneState.current = { markers, obstruction, controls, camera };
 
-    const material = new THREE.MeshBasicMaterial({ color: "#448caa" });
     new GLTFLoader().load(
-      "/lidar/facility.glb",
-      (gltf) => {
-        if (disposed) {
-          gltf.scene.traverse((object) => {
-            if (object instanceof THREE.Mesh) {
-              object.geometry.dispose();
-              for (const mat of Array.isArray(object.material)
-                ? object.material
-                : [object.material])
-                mat.dispose();
-            }
-          });
-          return;
-        }
-        gltf.scene.traverse((object) => {
-          if (object instanceof THREE.Mesh) {
-            for (const mat of Array.isArray(object.material)
-              ? object.material
-              : [object.material])
-              mat.dispose();
-            object.material = material;
-          }
+  "/lidar/baseline_room.glb",
+  (gltf) => {
+    if (disposed) return;
+
+    // Check whether the GLB has textures
+    gltf.scene.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        const materials = Array.isArray(object.material)
+          ? object.material
+          : [object.material];
+
+        materials.forEach((mat) => {
+          console.log("Material:", mat);
+          console.log("Texture:", "map" in mat ? mat.map : undefined);
+          console.log("Vertex colors:", "vertexColors" in mat ? mat.vertexColors : undefined);
         });
-        scene.add(gltf.scene);
-        setReady(true);
-      },
-      undefined,
-      () => {
-        if (!disposed)
-          setError(
-            "Could not load facility.glb. The waypoint and obstruction overlays are still available.",
-          );
-      },
-    );
+      }
+    });
+
+    // Keep original textures and materials
+    scene.add(gltf.scene);
+    setReady(true);
+  },
+  undefined,
+  (error) => {
+    console.error("Failed to load GLB:", error);
+    if (!disposed) {
+      setError("Could not load the textured facility model.");
+    }
+  },
+);
 
     const resize = new ResizeObserver(() => {
       const width = host.clientWidth;
@@ -260,7 +287,6 @@ export default function FacilityViewer({
             mat.dispose();
         }
       });
-      material.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
@@ -269,7 +295,8 @@ export default function FacilityViewer({
   useEffect(() => {
     const state = sceneState.current;
     if (!state) return;
-    state.markers.visible = showHistory;
+    // state.markers.visible = showHistory;
+    state.markers.visible = false;
     state.obstruction.visible = showObstruction;
     for (const object of state.markers.children) {
       if (!(object instanceof THREE.Mesh)) continue;
