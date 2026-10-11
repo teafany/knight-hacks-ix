@@ -62,6 +62,10 @@ Vite proxies `/api` requests to Django on port 8000. The frontend uses port 5173
 and does not automatically switch ports if it is occupied. These are local
 development servers, not a production deployment.
 
+For a persistent backend on an Ubuntu server, see
+[backend deployment](docs/deployment.md) for Gunicorn, Nginx, PostgreSQL,
+model runtime installation, and service management.
+
 ## Run a service independently
 
 For the frontend alone, including demo mode without Django:
