@@ -1,7 +1,10 @@
 import {
   CheckCircle2,
   FileSearch,
+  MapPin,
   PanelLeft,
+  Play,
+  Plus,
   Search,
   TableProperties,
   Trash2,
@@ -41,7 +44,8 @@ type DatasetSource =
   | "Assets"
   | "Locations"
   | "Missions"
-  | "Readings";
+  | "Readings"
+  | "Connected";
 
 type DatasetRecord = {
   id: string;
@@ -94,12 +98,20 @@ type PaginatedApiResponse<T> = {
   results: T[];
 };
 
-type PanelMode = "search" | "summary";
+type PanelMode = "search" | "more-info";
 
 type SummaryRelatedGroup = {
   label: string;
   endpoint: string;
   records: CsvRow[];
+};
+
+type RelatedRecordPreview = {
+  key: string;
+  row: CsvRow;
+  record: DatasetRecord;
+  missionId: string;
+  locationId: string;
 };
 
 type SummaryState = {
@@ -129,7 +141,7 @@ const typeKeys: Partial<Record<DatasetSource, string>> = {
   Readings: "measurement_type",
 };
 
-const recordEndpoints: Record<DatasetSource, string> = {
+const recordEndpoints: Partial<Record<DatasetSource, string>> = {
   Actions: "actions",
   Anomalies: "anomalies",
   Assets: "assets",
@@ -448,6 +460,7 @@ function relatedSummaryRequests(record: DatasetRecord) {
     return [
       { label: "Assets in area", endpoint: `records/assets?location_id=${locationId}` },
       { label: "Actions in area", endpoint: `records/actions?location_id=${locationId}` },
+      { label: "Replay events in area", endpoint: `records/replay-events?location_id=${locationId}` },
       { label: "LiDAR scans", endpoint: `records/lidar-scans?location_id=${locationId}` },
     ];
   }
@@ -514,6 +527,7 @@ function previewTitle(row: CsvRow) {
 
 function previewMeta(row: CsvRow) {
   return [
+    textValue(row.event_type),
     textValue(row.status) || textValue(row.review_status) || textValue(row.quality),
     textValue(row.location_id),
     textValue(row.asset_id),
@@ -521,6 +535,67 @@ function previewMeta(row: CsvRow) {
   ]
     .filter(Boolean)
     .join(" / ");
+}
+
+function sourceFromRelatedEndpoint(endpoint: string): DatasetSource | undefined {
+  const [path] = endpoint.split("?");
+  const segment = path.split("/").at(-1);
+  return Object.entries(recordEndpoints).find(
+    ([, value]) => value === segment,
+  )?.[0] as DatasetSource | undefined;
+}
+
+function relatedPreviewFor(
+  group: SummaryRelatedGroup,
+  row: CsvRow,
+  records: DatasetRecord[],
+): RelatedRecordPreview {
+  const source = sourceFromRelatedEndpoint(group.endpoint);
+  const id = source ? idFor(source, row) : "";
+  const matchedRecord =
+    source && id
+      ? records.find((item) => item.source === source && item.id === id)
+      : undefined;
+  const key =
+    matchedRecord?.id ||
+    id ||
+    textValue(row.event_id) ||
+    textValue(row.scan_id) ||
+    textValue(row.detection_id) ||
+    textValue(row.id) ||
+    JSON.stringify(row);
+  const locationId = textValue(row.location_id);
+  const missionId = textValue(row.mission_id);
+  const record =
+    matchedRecord ?? {
+      id: `${group.endpoint}:${key}`,
+      source: "Connected" as const,
+      subtype: group.label,
+      title: previewTitle(row),
+      locationId,
+      summary: previewMeta(row) || "Record connection",
+      fields: row,
+      searchText: [
+        key,
+        group.label,
+        previewTitle(row),
+        previewMeta(row),
+        missionId,
+        locationId,
+        ...Object.values(row),
+      ]
+        .map(textValue)
+        .join(" ")
+        .toLowerCase(),
+    };
+
+  return {
+    key,
+    row,
+    record,
+    missionId,
+    locationId,
+  };
 }
 
 function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
@@ -531,6 +606,9 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
   const [selectedSubtype, setSelectedSubtype] = useState("All");
   const [selectedLocationFilter, setSelectedLocationFilter] = useState("All");
   const [selectedRecordIds, setSelectedRecordIds] = useState<string[]>([]);
+  const [selectedConnectedRecords, setSelectedConnectedRecords] = useState<
+    DatasetRecord[]
+  >([]);
   const [summaryRecordId, setSummaryRecordId] = useState("");
   const [panelMode, setPanelMode] = useState<PanelMode>("search");
   const fallbackMissionPaths = useMemo(() => buildMissionPaths(), []);
@@ -549,6 +627,8 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
     "loading",
   );
   const [summaryState, setSummaryState] = useState<SummaryState | null>(null);
+  const [summaryRelatedSearch, setSummaryRelatedSearch] = useState("");
+  const [summaryRelatedGroup, setSummaryRelatedGroup] = useState("All");
   const [searchPanelHeight, setSearchPanelHeight] = useState(330);
   const searchPanelRef = useRef<HTMLElement>(null);
 
@@ -641,6 +721,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
   const clearSelections = () => {
     setSelectedWaypoints([]);
     setSelectedRecordIds([]);
+    setSelectedConnectedRecords([]);
     setSummaryRecordId("");
   };
 
@@ -657,12 +738,23 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
       : [...selectedRecordIds, key];
 
     setSelectedRecordIds(nextRecordIds);
+    setSelectedConnectedRecords((current) => {
+      if (record.source !== "Connected") return current;
+      return isSelected
+        ? current.filter((item) => recordKey(item) !== key)
+        : current.some((item) => recordKey(item) === key)
+          ? current
+          : [...current, record];
+    });
     if (record.locationId) setActiveWaypoint(record.locationId);
   };
 
   const deleteRailRecord = (record: DatasetRecord) => {
     const key = recordKey(record);
     setSelectedRecordIds((current) => current.filter((id) => id !== key));
+    setSelectedConnectedRecords((current) =>
+      current.filter((item) => recordKey(item) !== key),
+    );
     if (record.source === "Locations" && record.locationId) {
       setSelectedWaypoints((current) =>
         current.filter((id) => id !== record.locationId),
@@ -674,6 +766,15 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
   const selectSummaryRecord = (record: DatasetRecord) => {
     setSummaryRecordId(recordKey(record));
     if (record.locationId) setActiveWaypoint(record.locationId);
+  };
+
+  const selectRelatedLocation = (locationId: string) => {
+    if (!locationId) return;
+    setActiveWaypoint(locationId);
+    setSelectedWaypoints((current) =>
+      current.includes(locationId) ? current : [...current, locationId],
+    );
+    focusMap();
   };
 
   const focusMap = () => {
@@ -749,8 +850,11 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
     ),
   ).sort();
   const locationOptions = locations.map((location) => location.location_id);
+  const selectableRecords = [...records, ...selectedConnectedRecords];
   const selectedRecords = selectedRecordIds
-    .map((recordId) => records.find((record) => recordKey(record) === recordId))
+    .map((recordId) =>
+      selectableRecords.find((record) => recordKey(record) === recordId),
+    )
     .filter((record) => record?.source !== "Locations")
     .filter((record): record is DatasetRecord => Boolean(record));
   const selectedLocationRecords = selectedWaypoints
@@ -793,8 +897,11 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
     searchQuery,
   );
   const summaryKey = summaryRecord ? recordKey(summaryRecord) : "";
-  const summaryApiPath = summaryRecord
-    ? `records/${recordEndpoints[summaryRecord.source]}/${encodeURIComponent(summaryRecord.id)}`
+  const summaryEndpoint = summaryRecord
+    ? recordEndpoints[summaryRecord.source]
+    : undefined;
+  const summaryApiPath = summaryRecord && summaryEndpoint
+    ? `records/${summaryEndpoint}/${encodeURIComponent(summaryRecord.id)}`
     : "";
   const summaryHighlightsList = summaryRecord
     ? summaryHighlights(
@@ -803,15 +910,72 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
         summarySearchLabel,
       )
     : [];
+  const summaryLocationId = summaryRecord?.locationId || activeWaypoint;
+  const summaryLocation = locations.find(
+    (location) => location.location_id === summaryLocationId,
+  );
+  const summaryMissionId = summaryRecord
+    ? fieldValue(summaryRecord, "mission_id") ||
+      (summaryRecord.source === "Missions" ? summaryRecord.id : "")
+    : "";
+  const connectedRecordItems =
+    summaryState?.key === summaryKey && summaryState.status === "ready"
+      ? summaryState.groups.flatMap((group) =>
+          group.records.map((row, index) => ({
+            ...relatedPreviewFor(group, row, records),
+            groupLabel: group.label,
+            endpoint: group.endpoint,
+            index,
+          })),
+        )
+      : [];
+  const connectedGroupOptions = Array.from(
+    new Set(connectedRecordItems.map((item) => item.groupLabel)),
+  ).sort();
+  const filteredConnectedRecordItems = connectedRecordItems.filter((item) => {
+    const matchesGroup =
+      summaryRelatedGroup === "All" || item.groupLabel === summaryRelatedGroup;
+    const query = summaryRelatedSearch.trim().toLowerCase();
+    const matchesSearch =
+      query === "" ||
+      [
+        item.groupLabel,
+        previewTitle(item.row),
+        previewMeta(item.row),
+        item.missionId,
+        item.locationId,
+        ...Object.entries(item.row).flatMap(([key, value]) => [
+          key,
+          textValue(value),
+        ]),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    return matchesGroup && matchesSearch;
+  });
 
   useEffect(() => {
-    if (panelMode !== "summary" || !summaryRecord) return;
+    if (panelMode !== "more-info" || !summaryRecord) return;
     const abortController = new AbortController();
     const recordForSummary = summaryRecord;
     const currentKey = recordKey(recordForSummary);
-    const currentApiPath = `records/${recordEndpoints[recordForSummary.source]}/${encodeURIComponent(recordForSummary.id)}`;
+    const currentEndpoint = recordEndpoints[recordForSummary.source];
+    const currentApiPath = currentEndpoint
+      ? `records/${currentEndpoint}/${encodeURIComponent(recordForSummary.id)}`
+      : "";
 
     async function loadSummary() {
+      if (!currentApiPath) {
+        setSummaryState({
+          key: currentKey,
+          status: "ready",
+          primary: recordForSummary.fields,
+          groups: [],
+        });
+        return;
+      }
+
       try {
         setSummaryState({
           key: currentKey,
@@ -849,7 +1013,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
         });
       } catch (error) {
         if (abortController.signal.aborted) return;
-        console.error("Failed to load record summary", error);
+        console.error("Failed to load record details", error);
         setSummaryState({
           key: currentKey,
           status: "error",
@@ -858,7 +1022,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
           error:
             error instanceof Error
               ? error.message
-              : "Unable to load summary records.",
+              : "Unable to load connected records.",
         });
       }
     }
@@ -866,6 +1030,11 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
     loadSummary();
     return () => abortController.abort();
   }, [panelMode, summaryApiPath, summaryKey, summaryRecord]);
+
+  useEffect(() => {
+    setSummaryRelatedSearch("");
+    setSummaryRelatedGroup("All");
+  }, [summaryKey]);
 
   return (
     <div className="dataset-dashboard">
@@ -905,7 +1074,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
                       type="button"
                       className="rail-item-main"
                       onClick={() =>
-                        panelMode === "summary"
+                        panelMode === "more-info"
                           ? selectSummaryRecord(record)
                           : record.source === "Locations"
                             ? toggleWaypoint(record.locationId)
@@ -920,13 +1089,13 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
                         {record.source} / {record.subtype}
                       </span>
                     </button>
-                    {panelMode === "summary" ? (
+                    {panelMode === "more-info" ? (
                       <button
                         type="button"
                         className="rail-item-action select"
                         aria-pressed={Boolean(isSummaryRecord)}
                         onClick={() => selectSummaryRecord(record)}
-                        title="Select for summary"
+                        title="Select for more info"
                       >
                         <CheckCircle2 size={14} aria-hidden="true" />
                       </button>
@@ -958,12 +1127,12 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
           </button>
           <button
             type="button"
-            aria-pressed={panelMode === "summary"}
-            onClick={() => setPanelMode("summary")}
-            title="Show summary"
+            aria-pressed={panelMode === "more-info"}
+            onClick={() => setPanelMode("more-info")}
+            title="Show more info"
           >
             <FileSearch size={17} aria-hidden="true" />
-            <span>Summary</span>
+            <span>More info</span>
           </button>
         </div>
       </aside>
@@ -971,7 +1140,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
       <main className="dataset-main">
         <header className="dataset-page-heading">
           <h1 style={{"fontSize":"4.5rem", "marginTop":"2rem"}}>
-            {panelMode === "search" ? "Search" : "Summary"}
+            {panelMode === "search" ? "Search" : "More info"}
           </h1>
           <span>
             {apiStatus === "ready"
@@ -984,9 +1153,9 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
         <section
           ref={searchPanelRef}
           className={`dataset-search-panel ${
-            panelMode === "summary" ? "summary-page" : ""
+            panelMode === "more-info" ? "more-info-page" : ""
           }`}
-          aria-label={panelMode === "search" ? "Dataset search" : "Dataset summary"}
+          aria-label={panelMode === "search" ? "Dataset search" : "Dataset more info"}
           style={panelMode === "search" ? { height: searchPanelHeight } : undefined}
         >
           {panelMode === "search" ? (
@@ -1116,12 +1285,12 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
               </section>
             </>
           ) : (
-            <section className="summary-panel" aria-label="Selected record summary">
+            <section className="summary-panel" aria-label="Selected record more info">
               {summaryRecord ? (
                 <>
                   <div className="summary-heading">
                     <div>
-                      <p className="dataset-kicker">Selected item summary</p>
+                      <p className="dataset-kicker">More info</p>
                       <h2>{summaryRecord.title}</h2>
                       <span>
                         {summaryRecord.source} / {summaryRecord.subtype}
@@ -1161,41 +1330,158 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
                             ))}
                         </dl>
                       </section>
+                      {summaryLocation && (
+                        <section className="summary-map">
+                          <div className="summary-section-title">
+                            <MapPin size={16} aria-hidden="true" />
+                            <h3>Waypoint on map</h3>
+                          </div>
+                          <div className="summary-map-shell">
+                            <div className="summary-map-canvas">
+                              <img src={floorPlanUrl} alt="Fictional facility floor plan" />
+                              <span
+                                className="summary-map-pin"
+                                style={
+                                  {
+                                    left: `${summaryLocation.mapX}%`,
+                                    top: `${summaryLocation.mapY}%`,
+                                  } as CSSProperties
+                                }
+                              >
+                                {summaryLocation.location_id}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="summary-map-action"
+                            onClick={() => selectRelatedLocation(summaryLocation.location_id)}
+                          >
+                            Add waypoint to selection
+                          </button>
+                        </section>
+                      )}
                       <section className="summary-related">
                         <div className="summary-section-title">
                           <FileSearch size={16} aria-hidden="true" />
-                          <h3>Related API records</h3>
+                          <h3>Connected records</h3>
                         </div>
                         {summaryState?.key === summaryKey &&
                         summaryState.status === "loading" ? (
-                          <div className="dataset-empty">Loading summary records.</div>
+                          <div className="dataset-empty">Loading connected records.</div>
                         ) : summaryState?.key === summaryKey &&
                           summaryState.status === "error" ? (
                           <div className="dataset-empty">
                             {summaryState.error}
                           </div>
-                        ) : summaryState?.groups.length ? (
-                          <div className="summary-related-list">
-                            {summaryState.groups.map((group) => (
-                              <article key={group.endpoint}>
-                                <div>
-                                  <strong>{group.label}</strong>
-                                  <span>{group.records.length} records</span>
+                        ) : connectedRecordItems.length ? (
+                          <>
+                            <div className="summary-related-filters">
+                              <label>
+                                <span>Search</span>
+                                <div className="summary-related-search">
+                                  <Search size={14} aria-hidden="true" />
+                                  <input
+                                    type="search"
+                                    value={summaryRelatedSearch}
+                                    placeholder="Record, status, mission"
+                                    onChange={(event) =>
+                                      setSummaryRelatedSearch(event.target.value)
+                                    }
+                                  />
                                 </div>
-                                <small>GET /api/{group.endpoint}</small>
-                                {group.records.slice(0, 3).map((row, index) => (
-                                  <p key={`${group.endpoint}-${index}`}>
-                                    {previewTitle(row)}
-                                    {previewMeta(row) ? ` / ${previewMeta(row)}` : ""}
-                                  </p>
-                                ))}
+                              </label>
+                              <label>
+                                <span>Type</span>
+                                <select
+                                  value={summaryRelatedGroup}
+                                  onChange={(event) =>
+                                    setSummaryRelatedGroup(event.target.value)
+                                  }
+                                >
+                                  <option value="All">All connected records</option>
+                                  {connectedGroupOptions.map((group) => (
+                                    <option key={group} value={group}>
+                                      {group}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSummaryRelatedSearch("");
+                                  setSummaryRelatedGroup("All");
+                                }}
+                              >
+                                Clear
+                              </button>
+                              <strong>
+                                {filteredConnectedRecordItems.length} of{" "}
+                                {connectedRecordItems.length}
+                              </strong>
+                            </div>
+                            {filteredConnectedRecordItems.length ? (
+                          <div className="summary-related-list">
+                            {filteredConnectedRecordItems.map((preview) => {
+                              const isSelected =
+                                preview.record.source === "Locations" &&
+                                preview.record.locationId
+                                  ? selectedWaypoints.includes(
+                                      preview.record.locationId,
+                                    )
+                                  : selectedRecordIds.includes(
+                                      recordKey(preview.record),
+                                    );
+                              return (
+                              <article
+                                key={`${preview.endpoint}-${preview.key}-${preview.index}`}
+                              >
+                                <div>
+                                  <strong>{previewTitle(preview.row)}</strong>
+                                  <span>{preview.groupLabel}</span>
+                                </div>
+                                <p>{previewMeta(preview.row) || "Record connection"}</p>
+                                <div className="summary-related-actions">
+                                  <button
+                                    type="button"
+                                    aria-pressed={isSelected}
+                                    onClick={() => toggleRecord(preview.record)}
+                                    title="Add to selection"
+                                  >
+                                    <Plus size={13} aria-hidden="true" />
+                                    {isSelected ? "Added" : "Add"}
+                                  </button>
+                                </div>
                               </article>
-                            ))}
+                              );
+                            })}
                           </div>
+                            ) : (
+                              <div className="dataset-empty">
+                                No connected records match these filters.
+                              </div>
+                            )}
+                          </>
                         ) : (
-                          <div className="dataset-empty">No related API records found.</div>
+                          <div className="dataset-empty">No connected records found.</div>
                         )}
                       </section>
+                      {summaryMissionId && onOpenReplay && (
+                        <section className="summary-relay-link">
+                          <div>
+                            <span>Mission relay</span>
+                            <strong>{summaryMissionId}</strong>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onOpenReplay(summaryMissionId)}
+                          >
+                            <Play size={15} aria-hidden="true" />
+                            Open relay
+                          </button>
+                        </section>
+                      )}
                       {summaryState?.modelSummary && (
                         <section className="summary-models">
                           <div className="summary-section-title">
@@ -1228,11 +1514,7 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
               ) : (
                 <div className="summary-empty">
                   <FileSearch size={24} aria-hidden="true" />
-                  <h2>Select a search result or map area.</h2>
-                  <p>
-                    Summary uses the selected record type to retrieve related
-                    records from the documented API endpoints.
-                  </p>
+                  <h2>No location or record selected.</h2>
                 </div>
               )}
             </section>
