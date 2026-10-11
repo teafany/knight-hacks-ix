@@ -101,7 +101,19 @@ export default function FacilityViewer({
     grid.position.set(0, -1.8, 0);
     scene.add(grid);
     
-    scene.add(new THREE.AmbientLight(0xffffff, 2));
+    // Bright, even lighting for the Polycam room scan
+    scene.add(new THREE.AmbientLight(0xffffff, 3));
+
+    const hemisphereLight = new THREE.HemisphereLight(
+    0xffffff,
+    0x888888,
+    3
+  );
+  scene.add(hemisphereLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
+  directionalLight.position.set(5, 10, 5);
+  scene.add(directionalLight);
 
     const markers = new THREE.Group();
     for (const waypoint of data.waypoints) {
@@ -184,43 +196,38 @@ export default function FacilityViewer({
     scene.add(obstruction);
     sceneState.current = { markers, obstruction, controls, camera };
 
-    const material = new THREE.MeshBasicMaterial({ color: "#448caa" });
     new GLTFLoader().load(
-      // "/lidar/facility.glb",
-      "/lidar/real_facility.glb",
-      (gltf) => {
-        if (disposed) {
-          gltf.scene.traverse((object) => {
-            if (object instanceof THREE.Mesh) {
-              object.geometry.dispose();
-              for (const mat of Array.isArray(object.material)
-                ? object.material
-                : [object.material])
-                mat.dispose();
-            }
-          });
-          return;
-        }
-        gltf.scene.traverse((object) => {
-          if (object instanceof THREE.Mesh) {
-            for (const mat of Array.isArray(object.material)
-              ? object.material
-              : [object.material])
-              mat.dispose();
-            object.material = material;
-          }
+  "/lidar/baseline_room.glb",
+  (gltf) => {
+    if (disposed) return;
+
+    // Check whether the GLB has textures
+    gltf.scene.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        const materials = Array.isArray(object.material)
+          ? object.material
+          : [object.material];
+
+        materials.forEach((mat) => {
+          console.log("Material:", mat);
+          console.log("Texture:", "map" in mat ? mat.map : undefined);
+          console.log("Vertex colors:", "vertexColors" in mat ? mat.vertexColors : undefined);
         });
-        scene.add(gltf.scene);
-        setReady(true);
-      },
-      undefined,
-      () => {
-        if (!disposed)
-          setError(
-            "Could not load facility.glb. The waypoint and obstruction overlays are still available.",
-          );
-      },
-    );
+      }
+    });
+
+    // Keep original textures and materials
+    scene.add(gltf.scene);
+    setReady(true);
+  },
+  undefined,
+  (error) => {
+    console.error("Failed to load GLB:", error);
+    if (!disposed) {
+      setError("Could not load the textured facility model.");
+    }
+  },
+);
 
     const resize = new ResizeObserver(() => {
       const width = host.clientWidth;
@@ -280,7 +287,6 @@ export default function FacilityViewer({
             mat.dispose();
         }
       });
-      material.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
