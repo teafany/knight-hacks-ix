@@ -30,6 +30,7 @@ looking at.
 
 ## Features
 
+- **Inspection summary:** Bring mission performance, priority findings, saved AI results (including simulated examples), and spatial evidence together at `/summary`. See [summary data and setup](docs/summary-page.md).
 - **Mission overview:** Compare mission completion, action outcomes, and inspection findings.
 - **Interactive digital twin:** Explore a simulated facility in 3D, select waypoints, and view historical findings and synthetic obstructions.
 - **Mission replay:** Play back recorded mission events and follow SPOT’s simulated movement through the facility.
