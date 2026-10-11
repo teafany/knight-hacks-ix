@@ -133,9 +133,12 @@ export default function App() {
     }, 0);
   };
 
-  const openRelayPage = () => {
+  const openRelayPage = (missionId?: string) => {
     setPage("relay");
-    window.history.pushState(null, "", "/relay");
+    const query = missionId
+      ? `?mission_id=${encodeURIComponent(missionId)}`
+      : "";
+    window.history.pushState(null, "", `/relay${query}`);
     window.setTimeout(() => {
       document.getElementById("relay")?.scrollIntoView();
     }, 0);
@@ -198,7 +201,10 @@ export default function App() {
       <>
         {appNav}
         <main className="dataset-page" id="dashboard">
-          <DatasetDashboard onHome={openLandingPage} />
+          <DatasetDashboard
+            onHome={openLandingPage}
+            onOpenReplay={openRelayPage}
+          />
         </main>
       </>
     );
@@ -209,7 +215,12 @@ export default function App() {
       <>
         {appNav}
         <main className="relay-route" id="relay">
-          <RelayPage onHome={openLandingPage} />
+          <RelayPage
+            initialMissionId={
+              new URLSearchParams(window.location.search).get("mission_id") ??
+              undefined
+            }
+          />
         </main>
       </>
     );

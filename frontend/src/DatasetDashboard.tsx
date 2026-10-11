@@ -71,6 +71,7 @@ type LocationRow = {
 
 type DatasetDashboardProps = {
   onHome?: () => void;
+  onOpenReplay?: (missionId: string) => void;
 };
 
 type ReplayEvent = {
@@ -522,7 +523,7 @@ function previewMeta(row: CsvRow) {
     .join(" / ");
 }
 
-function DatasetDashboard({ onHome }: DatasetDashboardProps) {
+function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
   const [activeWaypoint, setActiveWaypoint] = useState("WP05");
   const [selectedWaypoints, setSelectedWaypoints] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -873,19 +874,6 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
           <span>S</span>
           <strong>SPOT</strong>
         </button>
-        <label className="mission-path-control rail-control">
-          <span>Replay path</span>
-          <select
-            value={selectedMissionId}
-            onChange={(event) => setSelectedMissionId(event.target.value)}
-          >
-            {missionPaths.map((mission) => (
-              <option key={mission.missionId} value={mission.missionId}>
-                {mission.missionId} - {mission.label}
-              </option>
-            ))}
-          </select>
-        </label>
         <section className="selection-rail" aria-label="Current search selection">
           <p>Current selection</p>
           {selectedRailRecords.length === 0 ? (
@@ -1271,8 +1259,9 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
                 <h2>Select with the Map!</h2>
               </div>
               <div className="map-summary">
-                <strong>{activeLocation?.location_name ?? "Select an area"}</strong>
-                <span>{activeWaypoint}</span>
+                <strong>
+                  {`${activeLocation?.location_name ?? "Select an area"}${activeWaypoint ? ` ( ${activeWaypoint} )` : ""}`}
+                </strong>
                 <small>
                   {activeLocationRecords.length} matching records in current search
                 </small>
@@ -1350,6 +1339,31 @@ function DatasetDashboard({ onHome }: DatasetDashboardProps) {
               </div>
             </div>
           </section>
+        )}
+        {panelMode === "search" && (
+          <div className="map-replay-controls">
+            <label className="mission-path-control map-replay-control">
+              <span>Replay path</span>
+              <select
+                value={selectedMissionId}
+                onChange={(event) => setSelectedMissionId(event.target.value)}
+              >
+                {missionPaths.map((mission) => (
+                  <option key={mission.missionId} value={mission.missionId}>
+                    {mission.missionId} - {mission.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="map-replay-button"
+              onClick={() => onOpenReplay?.(selectedMissionId)}
+              disabled={!selectedMissionId}
+            >
+              Replay selected path
+            </button>
+          </div>
         )}
       </main>
     </div>
