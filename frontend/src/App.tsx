@@ -173,7 +173,7 @@ export default function App() {
           <h1 id="hero-title">
             What will
             <strong>SPOT</strong>
-            explore?
+            <div style={{"marginTop":"-1.5rem"}}>explore?</div>
           </h1>
           <p className="hero-copy">
             One operational picture for replaying autonomous inspections,

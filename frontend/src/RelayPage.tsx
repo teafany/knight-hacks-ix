@@ -89,6 +89,14 @@ type TimelineMoment = {
   relatedEvents: ReplayEvent[];
 };
 
+type RoutePoint = {
+  locationId: string;
+  floor: string;
+  x: number;
+  y: number;
+  offsetSeconds: number;
+};
+
 const floorPlanPositions: Record<string, { x: number; y: number }> = {
   WP01: { x: 10.0, y: 76.5 },
   WP02: { x: 10.2, y: 51.4 },
@@ -230,6 +238,23 @@ function eventOrder(eventType: string) {
   if (eventType === "ACTION_FAILED") return 2;
   if (eventType === "MISSION_COMPLETED") return 3;
   return 4;
+}
+
+function buildRouteSegments(points: RoutePoint[]) {
+  return points.reduce<RoutePoint[][]>((segments, point) => {
+    const currentSegment = segments.at(-1);
+    const lastPoint = currentSegment?.at(-1);
+    if (!currentSegment || lastPoint?.floor !== point.floor) {
+      segments.push([point]);
+    } else {
+      currentSegment.push(point);
+    }
+    return segments;
+  }, []);
+}
+
+function formatRoutePoints(points: RoutePoint[]) {
+  return points.map((point) => `${point.x},${point.y}`).join(" ");
 }
 
 function buildActionReplayEvents(action: ActionRow): ReplayEvent[] {
@@ -417,7 +442,7 @@ function buildTimelineMoments(
 function RelayPage({ onHome }: RelayPageProps) {
   const [selectedMissionId, setSelectedMissionId] = useState("M001");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(12);
+  const [speed, setSpeed] = useState(30);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isDetailsCollapsed, setIsDetailsCollapsed] = useState(false);
 
@@ -486,9 +511,6 @@ function RelayPage({ onHome }: RelayPageProps) {
     ),
   );
   const currentMoment = timelineMoments[currentMomentIndex];
-  const currentLocation = currentMoment?.locationId
-    ? locations.find((location) => location.location_id === currentMoment.locationId)
-    : undefined;
   const visitedLocationIds = timelineMoments
     .filter(
       (moment) =>
@@ -497,28 +519,71 @@ function RelayPage({ onHome }: RelayPageProps) {
         moment.kind !== "MISSION_STARTED",
     )
     .map((moment) => moment.locationId as string);
-  const uniquePathIds = timelineMoments
-    .map((moment) => moment.locationId)
-    .filter((locationId): locationId is string => Boolean(locationId))
-    .filter((locationId, index, all) => index === 0 || all[index - 1] !== locationId);
-  const pathLocations = uniquePathIds
-    .map((locationId) =>
-      locations.find((location) => location.location_id === locationId),
-    )
-    .filter((location): location is LocationRow => Boolean(location));
-  const activePathLocations = visitedLocationIds
-    .filter((locationId, index, all) => index === 0 || all[index - 1] !== locationId)
-    .map((locationId) =>
-      locations.find((location) => location.location_id === locationId),
-    )
-    .filter((location): location is LocationRow => Boolean(location));
-  const pathPoints = pathLocations
-    .map((location) => `${location.mapX},${location.mapY}`)
-    .join(" ");
-  const activePathPoints = activePathLocations
-    .map((location) => `${location.mapX},${location.mapY}`)
-    .join(" ");
-  const activePathEndpoint = activePathLocations.at(-1);
+  const routePoints = timelineMoments.reduce<RoutePoint[]>((points, moment) => {
+    if (!moment.locationId) return points;
+    const location = locations.find(
+      (item) => item.location_id === moment.locationId,
+    );
+    if (!location || points.at(-1)?.locationId === location.location_id) {
+      return points;
+    }
+    points.push({
+      locationId: location.location_id,
+      floor: location.floor,
+      x: location.mapX,
+      y: location.mapY,
+      offsetSeconds: moment.offsetSeconds,
+    });
+    return points;
+  }, []);
+  const pathSegments = buildRouteSegments(routePoints);
+
+  const currentRouteIndex = routePoints.findLastIndex(
+    (point) => point.offsetSeconds <= elapsedSeconds,
+  );
+  const previousRoutePoint =
+    currentRouteIndex >= 0 ? routePoints[currentRouteIndex] : undefined;
+  const nextRoutePoint =
+    currentRouteIndex >= 0
+      ? routePoints[currentRouteIndex + 1]
+      : routePoints[0];
+  const isTravelingOnSameFloor =
+    previousRoutePoint &&
+    nextRoutePoint &&
+    previousRoutePoint.floor === nextRoutePoint.floor;
+  const routeProgress =
+    isTravelingOnSameFloor
+      ? Math.min(
+          1,
+          Math.max(
+            0,
+            (elapsedSeconds - previousRoutePoint.offsetSeconds) /
+              Math.max(1, nextRoutePoint.offsetSeconds - previousRoutePoint.offsetSeconds),
+          ),
+        )
+      : 0;
+  const currentMapPoint =
+    isTravelingOnSameFloor
+      ? {
+          locationId: previousRoutePoint.locationId,
+          floor: previousRoutePoint.floor,
+          x:
+            previousRoutePoint.x +
+            (nextRoutePoint.x - previousRoutePoint.x) * routeProgress,
+          y:
+            previousRoutePoint.y +
+            (nextRoutePoint.y - previousRoutePoint.y) * routeProgress,
+          offsetSeconds: elapsedSeconds,
+        }
+      : previousRoutePoint
+        ? previousRoutePoint
+        : undefined;
+  const activeRoutePoints = routePoints.filter(
+    (point) => point.offsetSeconds <= elapsedSeconds,
+  );
+  const activePathSegments = buildRouteSegments(
+    currentMapPoint ? [...activeRoutePoints, currentMapPoint] : activeRoutePoints,
+  );
   const failures = timelineMoments.filter((moment) => moment.status === "FAILED");
   const completionRate =
     timelineMoments.length > 0
@@ -605,37 +670,50 @@ function RelayPage({ onHome }: RelayPageProps) {
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >
-                <polyline className="relay-map-path planned" points={pathPoints} />
-                <polyline className="relay-map-path traveled" points={activePathPoints} />
-                {activePathLocations.length > 1 && (
+                {pathSegments.map((segment) => (
+                  <polyline
+                    className="relay-map-path planned"
+                    key={`planned-${segment[0]?.locationId}-${segment.at(-1)?.locationId}`}
+                    points={formatRoutePoints(segment)}
+                  />
+                ))}
+                {activePathSegments.map((segment) => (
+                  <polyline
+                    className="relay-map-path traveled"
+                    key={`traveled-${segment[0]?.locationId}-${segment.at(-1)?.locationId}`}
+                    points={formatRoutePoints(segment)}
+                  />
+                ))}
+                {activePathSegments.map((segment) => (
                   <polyline
                     className={`relay-map-path flow ${isPlaying ? "moving" : ""}`}
-                    points={activePathPoints}
+                    key={`flow-${segment[0]?.locationId}-${segment.at(-1)?.locationId}`}
+                    points={formatRoutePoints(segment)}
                   />
-                )}
-                {pathLocations.map((location, index) => (
+                ))}
+                {routePoints.map((point, index) => (
                   <g
                     className="relay-map-node"
-                    key={`${location.location_id}-${index}`}
-                    transform={`translate(${location.mapX} ${location.mapY})`}
+                    key={`${point.locationId}-${index}`}
+                    transform={`translate(${point.x} ${point.y})`}
                   >
                     <circle r="1.1" />
                     <text y="0.32">{index + 1}</text>
                   </g>
                 ))}
-                {activePathEndpoint && (
+                {currentMapPoint && (
                   <g
                     className="relay-path-endpoint"
-                    transform={`translate(${activePathEndpoint.mapX} ${activePathEndpoint.mapY})`}
+                    transform={`translate(${currentMapPoint.x} ${currentMapPoint.y})`}
                   >
                     <circle r="1.65" />
                     <circle r="0.72" />
                   </g>
                 )}
-                {currentLocation && (
+                {currentMapPoint && (
                   <g
                     className="relay-spot-marker"
-                    transform={`translate(${currentLocation.mapX} ${currentLocation.mapY})`}
+                    transform={`translate(${currentMapPoint.x} ${currentMapPoint.y})`}
                   >
                     <circle r="2.3" />
                     <circle r="0.85" />
@@ -708,7 +786,7 @@ function RelayPage({ onHome }: RelayPageProps) {
               <input
                 type="range"
                 min="1"
-                max="60"
+                max="180"
                 step="1"
                 value={speed}
                 onChange={(event) => setSpeed(Number(event.target.value))}
