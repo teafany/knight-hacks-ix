@@ -26,6 +26,8 @@ import readingsCsv from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/r
 import replayNdjson from "../../SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/replay.ndjson?raw";
 import floorPlanUrl from "../../SPOT_KnightHacks_Challenge_Kit Part One/04_ASSETS/fictional_floor_plan.png";
 import { apiURL } from "./apiConfig";
+import WorkspaceSidebar from "./WorkspaceSidebar";
+import type { SummarySelection } from "./summaryViews";
 import "./DatasetDashboard.css";
 
 type DataValue =
@@ -74,7 +76,9 @@ type LocationRow = {
 };
 
 type DatasetDashboardProps = {
-  onHome?: () => void;
+  onHome: () => void;
+  onNavigate: (page: "dashboard" | "lidar" | "relay") => void;
+  onSummarySelect: (selection: SummarySelection | null) => void;
   onOpenReplay?: (missionId: string) => void;
 };
 
@@ -598,7 +602,12 @@ function relatedPreviewFor(
   };
 }
 
-function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
+function DatasetDashboard({
+  onHome,
+  onNavigate,
+  onSummarySelect,
+  onOpenReplay,
+}: DatasetDashboardProps) {
   const [activeWaypoint, setActiveWaypoint] = useState("WP05");
   const [selectedWaypoints, setSelectedWaypoints] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1038,110 +1047,116 @@ function DatasetDashboard({ onHome, onOpenReplay }: DatasetDashboardProps) {
 
   return (
     <div className="dataset-dashboard">
-      <aside className="dataset-rail">
-        <button type="button" className="dataset-brand" onClick={onHome}>
-          <span>S</span>
-          <strong>SPOT</strong>
-        </button>
-        <section className="selection-rail" aria-label="Current search selection">
-          <p>Current selection</p>
-          {selectedRailRecords.length === 0 ? (
-            <div className="rail-empty">
-              Add map areas or data records to build a dive list.
-            </div>
-          ) : (
-            <>
-              <div className="rail-selection-summary">
-                <strong>
-                  {selectedLocations.length + selectedRecords.length} active
-                </strong>
-                <button type="button" onClick={clearSelections}>
-                  Clear
-                </button>
+      <WorkspaceSidebar
+        activePage="dashboard"
+        onHome={onHome}
+        onNavigate={onNavigate}
+        onSummarySelect={onSummarySelect}
+      >
+        <div className="dataset-sidebar-tools">
+          <section className="selection-rail" aria-label="Current search selection">
+            <p>Current selection</p>
+            {selectedRailRecords.length === 0 ? (
+              <div className="rail-empty">
+                Add map areas or data records to build a dive list.
               </div>
-              {selectedRailRecords.map((record) => {
-                const isSummaryRecord =
-                  summaryRecord && recordKey(record) === recordKey(summaryRecord);
-                return (
-                  <article
-                    key={`${record.source}-${record.id}`}
-                    className={`rail-item ${isSummaryRecord ? "active" : ""}`}
-                    onMouseEnter={() => {
-                      if (record.locationId) setActiveWaypoint(record.locationId);
-                    }}
-                >
-                    <button
-                      type="button"
-                      className="rail-item-main"
-                      onClick={() =>
-                        panelMode === "more-info"
-                          ? selectSummaryRecord(record)
-                          : record.source === "Locations"
-                            ? toggleWaypoint(record.locationId)
-                            : toggleRecord(record)
-                      }
-                      onFocus={() => {
+            ) : (
+              <>
+                <div className="rail-selection-summary">
+                  <strong>
+                    {selectedLocations.length + selectedRecords.length} active
+                  </strong>
+                  <button type="button" onClick={clearSelections}>
+                    Clear
+                  </button>
+                </div>
+                {selectedRailRecords.map((record) => {
+                  const isSummaryRecord =
+                    summaryRecord && recordKey(record) === recordKey(summaryRecord);
+                  return (
+                    <article
+                      key={`${record.source}-${record.id}`}
+                      className={`rail-item ${isSummaryRecord ? "active" : ""}`}
+                      onMouseEnter={() => {
                         if (record.locationId) setActiveWaypoint(record.locationId);
                       }}
-                    >
-                      <strong>{record.title}</strong>
-                      <span>
-                        {record.source} / {record.subtype}
-                      </span>
-                    </button>
-                    {panelMode === "more-info" ? (
+                  >
                       <button
                         type="button"
-                        className="rail-item-action select"
-                        aria-pressed={Boolean(isSummaryRecord)}
-                        onClick={() => selectSummaryRecord(record)}
-                        title="Select for more info"
+                        className="rail-item-main"
+                        onClick={() =>
+                          panelMode === "more-info"
+                            ? selectSummaryRecord(record)
+                            : record.source === "Locations"
+                              ? toggleWaypoint(record.locationId)
+                              : toggleRecord(record)
+                        }
+                        onFocus={() => {
+                          if (record.locationId) setActiveWaypoint(record.locationId);
+                        }}
                       >
-                        <CheckCircle2 size={14} aria-hidden="true" />
+                        <strong>{record.title}</strong>
+                        <span>
+                          {record.source} / {record.subtype}
+                        </span>
                       </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="rail-item-action delete"
-                        onClick={() => deleteRailRecord(record)}
-                        title="Delete from rail"
-                      >
-                        <Trash2 size={14} aria-hidden="true" />
-                      </button>
-                    )}
-                  </article>
-                );
-              })}
-            </>
-          )}
-        </section>
-        <div className="rail-view-toggle" aria-label="Dataset panel mode">
-          <button
-            type="button"
-            aria-pressed={panelMode === "search"}
-            onClick={() => setPanelMode("search")}
-            title="Show search"
-          >
-            <Search size={17} aria-hidden="true" />
-            <span>Search</span>
-          </button>
-          <button
-            type="button"
-            aria-pressed={panelMode === "more-info"}
-            onClick={() => setPanelMode("more-info")}
-            title="Show more info"
-          >
-            <FileSearch size={17} aria-hidden="true" />
-            <span>More info</span>
-          </button>
+                      {panelMode === "more-info" ? (
+                        <button
+                          type="button"
+                          className="rail-item-action select"
+                          aria-pressed={Boolean(isSummaryRecord)}
+                          onClick={() => selectSummaryRecord(record)}
+                          title="Select for more info"
+                        >
+                          <CheckCircle2 size={14} aria-hidden="true" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="rail-item-action delete"
+                          onClick={() => deleteRailRecord(record)}
+                          title="Delete from rail"
+                        >
+                          <Trash2 size={14} aria-hidden="true" />
+                        </button>
+                      )}
+                    </article>
+                  );
+                })}
+              </>
+            )}
+          </section>
+          <div className="rail-view-toggle" aria-label="Inspect data panel mode">
+            <button
+              type="button"
+              aria-pressed={panelMode === "search"}
+              onClick={() => setPanelMode("search")}
+              title="Show search"
+            >
+              <Search size={17} aria-hidden="true" />
+              <span>Search</span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={panelMode === "more-info"}
+              onClick={() => setPanelMode("more-info")}
+              title="Show more info"
+            >
+              <FileSearch size={17} aria-hidden="true" />
+              <span>More info</span>
+            </button>
+          </div>
         </div>
-      </aside>
+      </WorkspaceSidebar>
 
       <main className="dataset-main">
-        <header className="dataset-page-heading">
-          <h1 style={{"fontSize":"4.5rem", "marginTop":"2rem"}}>
-            {panelMode === "search" ? "Search" : "More info"}
-          </h1>
+        <header className="dataset-page-heading" id="dataset-search">
+          <div>
+            <p className="dataset-kicker">
+              {panelMode === "search" ? "Search records" : "Record details"}
+            </p>
+            <h1>Inspect data</h1>
+          </div>
           <span>
             {apiStatus === "ready"
               ? ""

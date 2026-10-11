@@ -3,7 +3,6 @@ import {
   Activity,
   ArrowRight,
   AudioLines,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
   CircleCheck,
@@ -13,10 +12,8 @@ import {
   Database,
   FileText,
   Gauge,
-  Home,
   Layers3,
   Map,
-  Radar,
   RefreshCw,
   Route,
   Search,
@@ -31,6 +28,7 @@ import { prioritizeFindings, summarizeEvidence } from "./summaryInsights";
 import type { SavedDetection, SummaryData } from "./summaryTypes";
 import type { ClusteredChange } from "./types";
 import SummaryOverview from "./SummaryOverview";
+import WorkspaceSidebar from "./WorkspaceSidebar";
 import {
   readSummarySelection,
   selectSummaryRecords,
@@ -509,7 +507,7 @@ function SummaryContent({
                   className="summary-text-button"
                   onClick={() => onNavigate("dashboard")}
                 >
-                  Explore facility map <ArrowRight size={16} />
+                  Open Inspect data <ArrowRight size={16} />
                 </button>
               </section>
             </div>
@@ -800,7 +798,7 @@ function SummaryContent({
                   className="summary-link-button"
                   onClick={() => onNavigate("lidar")}
                 >
-                  Open digital twin <ArrowRight size={17} />
+                  Open Lidar <ArrowRight size={17} />
                 </button>
               </section>
             </div>
@@ -996,75 +994,13 @@ export default function SummaryPage({ onHome, onNavigate }: Props) {
   const [refresh, setRefresh] = useState(0);
   return (
     <div className="summary-shell">
-      <aside className="summary-sidebar">
-        <button
-          className="summary-brand"
-          onClick={onHome}
-          aria-label="Spotlight home"
-        >
-          <span>S</span>
-          <strong>SPOTLIGHT</strong>
-        </button>
-        <p className="summary-nav-label">Inspection intelligence</p>
-        <nav aria-label="Summary sections">
-          <button
-            className={!selection ? "active" : ""}
-            aria-current={!selection ? "page" : undefined}
-            onClick={() => selectView(null)}
-          >
-            <BarChart3 size={18} />
-            Summary
-          </button>
-          <button
-            className={selection?.section === "findings" ? "active" : ""}
-            onClick={() => selectView({ section: "findings", review: true })}
-          >
-            <ClipboardCheck size={18} />
-            Review queue
-          </button>
-          <button
-            className={selection?.section === "models" ? "active" : ""}
-            onClick={() => selectView({ section: "models" })}
-          >
-            <Cpu size={18} />
-            AI evidence
-          </button>
-          <button
-            className={selection?.section === "evidence" ? "active" : ""}
-            onClick={() => selectView({ section: "evidence" })}
-          >
-            <Database size={18} />
-            Collected data
-          </button>
-        </nav>
-        <p className="summary-nav-label">Explore workspace</p>
-        <nav aria-label="Other workspaces">
-          <button onClick={onHome}>
-            <Home size={18} />
-            Home
-          </button>
-          <button onClick={() => onNavigate("dashboard")}>
-            <Map size={18} />
-            Facility map
-          </button>
-          <button onClick={() => onNavigate("lidar")}>
-            <Radar size={18} />
-            Digital twin
-          </button>
-          <button onClick={() => onNavigate("relay")}>
-            <Route size={18} />
-            Mission replay
-          </button>
-        </nav>
-        <div className="summary-sidebar-footer">
-          <span className="summary-live-dot" />
-          Knight Hacks IX
-          <p>
-            Recorded inspections.
-            <br />A clearer next move.
-          </p>
-        </div>
-      </aside>
+      <WorkspaceSidebar
+        activePage="summary"
+        selection={selection}
+        onHome={onHome}
+        onNavigate={onNavigate}
+        onSummarySelect={selectView}
+      />
       <main className="summary-main" id="summary-top">
         <header className="summary-topbar">
           <span>

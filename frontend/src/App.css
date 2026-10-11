@@ -11,8 +11,8 @@
 .app-nav-inner {
   position: relative;
   display: flex;
-  width: 34px;
-  min-height: 34px;
+  width: 40px;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
   padding: 3px;
@@ -28,35 +28,40 @@
     box-shadow 180ms ease;
 }
 
-.app-nav-inner::before {
-  content: "";
-  position: absolute;
+.app-nav-dot {
   width: 6px;
   height: 6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.82);
-  transition:
-    opacity 150ms ease,
-    transform 180ms ease;
 }
 
-.app-nav:hover .app-nav-inner,
-.app-nav:focus-within .app-nav-inner {
-  width: 320px;
+.app-nav.is-open .app-nav-inner {
+  width: 480px;
   background: rgba(13, 13, 11, 0.46);
   box-shadow: 0 14px 38px rgba(0, 0, 0, 0.26);
 }
 
-.app-nav:hover .app-nav-inner::before,
-.app-nav:focus-within .app-nav-inner::before {
-  opacity: 0;
-  transform: scale(0.55);
-}
-
-.app-nav-link {
+.app-nav-link,
+.app-nav-toggle {
   border: 0;
   color: #fff;
   cursor: pointer;
+}
+
+.app-nav-toggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.app-nav-toggle svg {
+  width: 16px;
+  height: 16px;
 }
 
 .app-nav-links {
@@ -64,25 +69,11 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
+  flex: 1;
   min-width: 0;
-  opacity: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  transform: translateY(-2px);
-  transition:
-    opacity 160ms ease 80ms,
-    transform 180ms ease 80ms;
-  pointer-events: none;
 }
 
-.app-nav:hover .app-nav-links,
-.app-nav:focus-within .app-nav-links {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.app-nav-links::-webkit-scrollbar {
+.app-nav-links[hidden] {
   display: none;
 }
 
@@ -113,10 +104,15 @@
 }
 
 .app-nav-link:hover,
-.app-nav-link:focus-visible {
+.app-nav-toggle:hover {
   background: rgba(255, 255, 255, 0.12);
-  outline: none;
   transform: translateY(-1px);
+}
+
+.app-nav-link:focus-visible,
+.app-nav-toggle:focus-visible {
+  outline: 2px solid #dfb238;
+  outline-offset: -2px;
 }
 
 .app-nav-link.active {
@@ -125,8 +121,76 @@
 }
 
 .site-shell {
+  container-type: inline-size;
   overflow: hidden;
   background: #f8f7f2;
+}
+
+.workspace-page-shell {
+  display: grid;
+  grid-template-columns: 215px minmax(0, 1fr);
+  min-height: 100svh;
+}
+
+.workspace-page-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.site-shell h1 {
+  font-size: clamp(58px, 6.3cqw, 96px);
+}
+
+@media (max-width: 900px) {
+  .workspace-page-shell {
+    grid-template-columns: 175px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-page-shell {
+    display: block;
+  }
+}
+
+@container (max-width: 800px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .intro {
+    min-height: 620px;
+    padding: 70px 24px 62px;
+  }
+
+  .visual {
+    min-height: 620px;
+  }
+
+  .status-pill {
+    top: 32px;
+    right: 22px;
+    left: auto;
+  }
+
+  .mission-card {
+    top: 118px;
+    left: 22px;
+    width: min(390px, calc(100% - 52px));
+    height: 340px;
+  }
+
+  .robot-wrap {
+    right: -2%;
+    bottom: -2%;
+    width: min(90%, 550px);
+  }
+
+  .section-heading,
+  .workflow-section {
+    grid-template-columns: 1fr;
+  }
 }
 
 .hero {
@@ -649,9 +713,8 @@ footer > * {
     margin: 0 auto;
   }
 
-  .app-nav:hover .app-nav-inner,
-  .app-nav:focus-within .app-nav-inner {
-    width: min(320px, 100%);
+  .app-nav.is-open .app-nav-inner {
+    width: min(480px, 100%);
   }
 
   .app-nav-links {
@@ -716,12 +779,28 @@ footer > * {
 }
 
 @media (max-width: 560px) {
+  .app-nav:not(.is-open) .app-nav-inner {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  .app-nav.is-open .app-nav-inner {
+    border-radius: 20px;
+  }
+
+  .app-nav-links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .app-nav-inner {
     padding: 3px;
   }
 
   .app-nav-link {
-    padding: 0 8px;
+    min-height: 34px;
+    gap: 4px;
+    padding: 0 5px;
   }
 
   .intro {
@@ -782,6 +861,10 @@ footer > * {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .app-nav-inner,
+  .app-nav-link {
+    transition: none;
+  }
   html {
     scroll-behavior: auto;
   }

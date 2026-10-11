@@ -8,7 +8,7 @@ where it happened, and what needs attention**.
 
 Built at **Knight Hacks IX** for **NextEra Energy’s SPOT Operational Intelligence
 Challenge**, using the challenge’s synthetic dataset. The facility and robot
-movement are simulated; the dashboard shows recorded inspection data.
+movement are simulated; the Inspect data page shows recorded data.
 
 **Devpost:** https://devpost.com/software/spotlight-fxqamj
 
@@ -32,10 +32,10 @@ looking at.
 
 - **Inspection summary:** Bring mission performance, priority findings, saved AI results (including simulated examples), and spatial evidence together at `/summary`. See [summary data and setup](docs/summary-page.md).
 - **Mission overview:** Compare mission completion, action outcomes, and inspection findings.
-- **Interactive digital twin:** Explore a simulated facility in 3D, select waypoints, and view historical findings and synthetic obstructions.
+- **Interactive Lidar:** Explore a simulated facility in 3D, select waypoints, and view historical findings and synthetic obstructions.
 - **Mission replay:** Play back recorded mission events and follow SPOT’s simulated movement through the facility.
 - **Dataset exploration:** Browse the challenge data and explore relationships between missions, actions, readings, anomalies, assets, and locations.
-- **LiDAR change detection:** Align point clouds and group geometric changes into possible obstructions for the digital twin.
+- **LiDAR change detection:** Align point clouds and group geometric changes into possible obstructions for the Lidar view.
 - **Machine learning APIs:** Run gauge detection, corrosion classification, thermal-image classification, and experimental acoustic analysis through backend endpoints.
 - **Demo and API modes:** Explore a bundled dataset snapshot or connect the dashboard to Django inspection records.
 
@@ -45,7 +45,7 @@ looking at.
 
 We built the frontend with **React and TypeScript**, using **Vite** for development
 and builds. **Three.js** displays the facility model, waypoints, and obstruction
-overlays in the digital twin.
+overlays in the Lidar view.
 
 The **Django REST Framework** backend serves dashboard data, record APIs, and
 stateless model inference. **PostgreSQL** stores inspection records, replay
@@ -114,7 +114,7 @@ VITE_API_BASE_URL=/api npm run dev
 | API health check | http://127.0.0.1:8000/api/health |
 | API documentation | http://127.0.0.1:8000/api/docs |
 
-Choose **Demo data** to explore the bundled dataset or **Django API** to load your imported records. Both display historical, synthetic inspection data.
+Choose **Demo data** to explore the bundled dataset or **Django API** to load your imported records. Both display historical, synthetic records on Inspect data.
 
 ### Add simulated inference examples
 
