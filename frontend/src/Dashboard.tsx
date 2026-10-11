@@ -370,72 +370,47 @@ return (
 
       `}</style>
 
-      <aside className="sidebar">
-
-        <a className="brand" href="#overview">
-
+            <aside className="sidebar">
+        <a
+          className="brand"
+          href="#"
+          aria-label="SPOT Facility LiDAR – Home"
+          onClick={(event) => {
+            event.preventDefault();
+            if (onHome) onHome();
+            else window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        >
           <span className="brand-mark">S</span>
-
           <span>
-
             SPOT<span className="brand-sub">FACILITY LIDAR</span>
 
           </span>
-
         </a>
 
-        <div className="nav-label">LIDAR PAGE</div>
-
-        <nav aria-label="Dashboard sections">
-
-          <button className="nav-home" type="button" onClick={onHome}>
-
-            <span>⌂</span>Home
-
-          </button>
-
+        <nav aria-label="Dashboard sections" style={{ marginTop: 32 }}>
           <a href="#overview" className={activeSection === "overview" ? "nav-active" : ""}>
-
             <span>▦</span>Overview
-
           </a>
-
           <a href="#digital-twin" className={activeSection === "digital-twin" ? "nav-active" : ""}>
-
             <span>◇</span>Digital twin
-
           </a>
-
           <a href="#findings" className={activeSection === "findings" ? "nav-active" : ""}>
-
             <span>◉</span>Findings
-
           </a>
-
           <a href="#missions" className={activeSection === "missions" ? "nav-active" : ""}>
-
             <span>≡</span>Missions
-
           </a>
-
         </nav>
 
         <div className="sidebar-footer">
-
           <span className="dot amber" /> KNIGHT HACKS IX
-
           <span>
-
             Facility inspection workspace
-
             <br />
-
             Single-room inspection
-
           </span>
-
         </div>
-
       </aside>
 
       <div className="dashboard-content" id="overview">
