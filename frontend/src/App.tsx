@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Dashboard from "./Dashboard";
 import DatasetDashboard from "./DatasetDashboard";
+import RelayPage from "./RelayPage";
 import robotImage from "./assets/spot-robot.svg";
 import "./App.css";
 
@@ -37,6 +38,14 @@ const capabilities = [
     meta: "Baseline / Improved",
     target: "missions",
   },
+  {
+    id: "relay-replay",
+    number: "05",
+    title: "Relay replay",
+    text: "Play back the replay.ndjson mission feed, watch SPOT move, and inspect related action events in time.",
+    meta: "Replay / Timeline",
+    target: "relay",
+  },
 ];
 
 function ArrowIcon() {
@@ -56,26 +65,37 @@ function ArrowIcon() {
 }
 
 export default function App() {
-  const [page, setPage] = useState<"landing" | "lidar" | "dashboard">(() => {
+  const [page, setPage] = useState<"landing" | "lidar" | "dashboard" | "relay">(() => {
+    if (window.location.pathname === "/relay") return "relay";
     if (window.location.hash === "#lidar") return "lidar";
     if (window.location.hash === "#dashboard") return "dashboard";
+    if (window.location.hash === "#relay") return "relay";
     return "landing";
   });
 
   useEffect(() => {
-    const onHashChange = () => {
+    const syncRoute = () => {
+      if (window.location.pathname === "/relay") {
+        setPage("relay");
+        return;
+      }
       if (window.location.hash === "#lidar") setPage("lidar");
       if (window.location.hash === "#dashboard") setPage("dashboard");
+      if (window.location.hash === "#relay") setPage("relay");
       if (window.location.hash === "#top") setPage("landing");
     };
 
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+    window.addEventListener("hashchange", syncRoute);
+    window.addEventListener("popstate", syncRoute);
+    return () => {
+      window.removeEventListener("hashchange", syncRoute);
+      window.removeEventListener("popstate", syncRoute);
+    };
   }, []);
 
   const openLandingPage = () => {
     setPage("landing");
-    window.history.pushState(null, "", "#top");
+    window.history.pushState(null, "", "/#top");
     window.setTimeout(() => {
       document.getElementById("top")?.scrollIntoView();
     }, 0);
@@ -97,6 +117,14 @@ export default function App() {
     }, 0);
   };
 
+  const openRelayPage = () => {
+    setPage("relay");
+    window.history.pushState(null, "", "/relay");
+    window.setTimeout(() => {
+      document.getElementById("relay")?.scrollIntoView();
+    }, 0);
+  };
+
   if (page === "lidar") {
     return (
       <main className="lidar-page" id="lidar">
@@ -109,6 +137,14 @@ export default function App() {
     return (
       <main className="dataset-page" id="dashboard">
         <DatasetDashboard onHome={openLandingPage} />
+      </main>
+    );
+  }
+
+  if (page === "relay") {
+    return (
+      <main className="relay-route" id="relay">
+        <RelayPage onHome={openLandingPage} />
       </main>
     );
   }
@@ -146,20 +182,20 @@ export default function App() {
               href="#lidar"
               onClick={(event) => {
                 event.preventDefault();
-                openLidarPage("missions");
-              }}
-            >
-              Previous inspections
-              <ArrowIcon />
-            </a>
-            <a
-              href="#lidar"
-              onClick={(event) => {
-                event.preventDefault();
                 openLidarPage("digital-twin");
               }}
             >
               Explore LiDAR
+              <ArrowIcon />
+            </a>
+            <a
+              href="/relay"
+              onClick={(event) => {
+                event.preventDefault();
+                openRelayPage();
+              }}
+            >
+              Replay relay
               <ArrowIcon />
             </a>
           </div>
@@ -168,12 +204,12 @@ export default function App() {
         <div className="visual" aria-label="Spot robot mission overview">
           <div className="status-pill">
             <span />
-            Synthetic inspection data
+            bz-woof! hello!!
           </div>
           <div className="mission-card">
             <p>Inspection workspace</p>
             <strong>15</strong>
-            <span>facility waypoints</span>
+            <span>facility <br></br>waypoints</span>
             <div className="mission-meta">
               <span>Synthetic dataset</span>
               <span>Historical records</span>
@@ -217,7 +253,11 @@ export default function App() {
                 href="#lidar"
                 onClick={(event) => {
                   event.preventDefault();
-                  openLidarPage(capability.target);
+                  if (capability.target === "relay") {
+                    openRelayPage();
+                  } else {
+                    openLidarPage(capability.target);
+                  }
                 }}
               >
                 Open workspace <ArrowIcon />
