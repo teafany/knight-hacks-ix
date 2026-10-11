@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from .inference_serializers import InferenceResultSerializer
 from .models import Anomaly, Mission, SCENARIOS, SEVERITIES
 
 
@@ -27,6 +28,7 @@ class MissionSerializer(serializers.ModelSerializer):
 class FindingSerializer(serializers.ModelSerializer):
     asset_name = serializers.CharField(source='asset.asset_name', read_only=True)
     location_name = serializers.CharField(source='location.location_name', read_only=True)
+    inference_result = InferenceResultSerializer(source='ml_detection.result', read_only=True, allow_null=True)
 
     class Meta:
         model = Anomaly
@@ -34,6 +36,7 @@ class FindingSerializer(serializers.ModelSerializer):
             'anomaly_id', 'action_id', 'mission_id', 'asset_id', 'asset_name',
             'location_id', 'location_name', 'timestamp', 'anomaly_type',
             'severity', 'operator_review_required', 'description', 'synthetic',
+            'ml_detection_id', 'inference_result',
         ]
 
 

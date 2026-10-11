@@ -26,6 +26,46 @@ OpenAPI 3 schema: `/api/schema` (use `Accept: application/json` for JSON).
 Swagger assets are served locally through drf-spectacular-sidecar, as described
 in the [official setup documentation](https://drf-spectacular.readthedocs.io/en/stable/readme.html).
 
+## Simulated dashboard data
+
+After migrations and the challenge import, seed examples without installing or
+running the model runtime:
+
+```sh
+.venv/bin/python server/manage.py seed_simulated_inference
+```
+
+The command adds mission `SIM-AI-M001`, nine inspection actions, nine saved
+inference responses and six linked review findings. It uses existing challenge
+assets for gauge, motor and pump examples, plus a synthetic yoke-suspension asset
+at WP05 for the corrosion model's supported crop domain.
+
+| Model | Simulated outcomes |
+| --- | --- |
+| Gauge | Gauge/center/needle boxes; no detections |
+| Corrosion | Suspected corrosion; normal crop; ambiguous scores |
+| Thermal | Cooling fan failure pattern; healthy no-load reference pattern |
+| Acoustic | Experimental scores requiring review; silent/unreadable audio |
+
+Records use `[SIMULATED]` descriptions/notes and `SIMULATED-` frame IDs. Source
+hashes identify fabricated samples, not captured files. Scores are uncalibrated;
+gauge values, radiometric temperatures and hazard severity remain null, matching
+the models' contracts. All findings start at LOW as a demo review priority, not
+a severity predicted by a model. Clear results are saved without inventing
+anomaly findings.
+
+The existing findings list/detail APIs include nullable `ml_detection_id` and
+`inference_result` fields. Query `/api/findings?mission_id=SIM-AI-M001` for the six
+findings, `/api/records/ml-detections?mission_id=SIM-AI-M001` for all nine results,
+and `/api/records/ml-detections/summary` for per-model counts. Dashboard metrics
+include the new mission, actions and findings. The LiDAR workspace's existing
+Django API mode can display the findings; the static map dashboard and bundled
+demo snapshot are unchanged. No frontend files are modified by this command.
+
+Reruns create no duplicates and preserve review statuses, notes and finding
+review decisions. Conflicting record IDs roll back the whole seed without
+overwriting existing data. Reimporting the original challenge remains safe.
+
 ## Endpoints
 
 All uploads are `multipart/form-data`. Paths have no trailing slash.

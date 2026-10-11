@@ -154,6 +154,18 @@ Install `server/requirements-inference.txt` for model execution. Webcam, browser
 and Spot SDK camera clients send independent frame requests without server-side
 camera sessions. See [inference setup, API contracts, and camera commands](docs/inference-api.md).
 
+To add backend-only simulated AI results after importing the challenge data:
+
+```sh
+.venv/bin/python server/manage.py seed_simulated_inference
+```
+
+This adds nine saved gauge, corrosion, thermal and acoustic responses plus six
+linked review findings under mission `SIM-AI-M001`. The LiDAR workspace's Django
+API mode displays the new findings; the findings APIs also return their linked
+inference results. Examples are labeled `[SIMULATED]`; no model execution or
+frontend changes are required. Reruns preserve reviews and create no duplicates.
+
 ## Global Records and Replays
 
 Full CRUD is available for locations, assets, missions, actions, readings,

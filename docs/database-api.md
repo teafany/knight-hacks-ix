@@ -240,3 +240,10 @@ and cover anonymous CRUD for all resources, JSONB storage, filtering, ordering,
 constraints, protected deletion, nullable links, full import/rollback, and
 existing dashboard/inference behavior. Interactive Swagger: `/api/docs`;
 OpenAPI schema: `/api/schema`; ReDoc: `/api/redoc`.
+
+Swagger and ReDoc group record CRUD operations by resource: Locations, Assets,
+Missions, Actions, Readings, Anomalies, LiDAR Scans, ML Detections, Replays,
+Replay Events, and Import Reports. Each section describes the records it manages.
+The saved detection summary is in ML Detections; model execution is in Inference.
+Dashboard groups the read-only analytics and finding endpoints, including finding
+details, while Health contains the API process check.

@@ -28,7 +28,6 @@ def record_schema(*filters):
     )
 
 
-@extend_schema(tags=['Global Records'])
 class GlobalRecordViewSet(ModelViewSet):
     authentication_classes = []
     permission_classes = [AllowAny]
@@ -75,6 +74,7 @@ class GlobalRecordViewSet(ModelViewSet):
 
 
 @record_schema('zone_type', 'floor')
+@extend_schema(tags=['Locations'])
 class LocationViewSet(GlobalRecordViewSet):
     queryset = Location.objects.order_by('location_id')
     serializer_class = LocationRecordSerializer
@@ -82,6 +82,7 @@ class LocationViewSet(GlobalRecordViewSet):
 
 
 @record_schema('location_id', 'asset_type', 'criticality')
+@extend_schema(tags=['Assets'])
 class AssetViewSet(GlobalRecordViewSet):
     queryset = Asset.objects.select_related('location').order_by('asset_id')
     serializer_class = AssetRecordSerializer
@@ -89,6 +90,7 @@ class AssetViewSet(GlobalRecordViewSet):
 
 
 @record_schema('scenario', 'mission_status')
+@extend_schema(tags=['Missions'])
 class MissionViewSet(GlobalRecordViewSet):
     queryset = Mission.objects.order_by('start_time', 'mission_id')
     serializer_class = MissionRecordSerializer
@@ -96,6 +98,7 @@ class MissionViewSet(GlobalRecordViewSet):
 
 
 @record_schema('mission_id', 'asset_id', 'location_id', 'status')
+@extend_schema(tags=['Actions'])
 class ActionViewSet(GlobalRecordViewSet):
     queryset = Action.objects.select_related('mission', 'asset', 'location').order_by('timestamp', 'action_id')
     serializer_class = ActionRecordSerializer
@@ -103,6 +106,7 @@ class ActionViewSet(GlobalRecordViewSet):
 
 
 @record_schema('mission_id', 'action_id', 'asset_id', 'measurement_type')
+@extend_schema(tags=['Readings'])
 class ReadingViewSet(GlobalRecordViewSet):
     queryset = Reading.objects.select_related('action', 'mission', 'asset', 'location').order_by('timestamp', 'reading_id')
     serializer_class = ReadingRecordSerializer
@@ -110,6 +114,7 @@ class ReadingViewSet(GlobalRecordViewSet):
 
 
 @record_schema('mission_id', 'action_id', 'asset_id', 'severity')
+@extend_schema(tags=['Anomalies'])
 class AnomalyViewSet(GlobalRecordViewSet):
     queryset = Anomaly.objects.select_related('action', 'mission', 'asset', 'location', 'ml_detection').order_by('timestamp', 'anomaly_id')
     serializer_class = AnomalyRecordSerializer
@@ -117,6 +122,7 @@ class AnomalyViewSet(GlobalRecordViewSet):
 
 
 @record_schema('mission_id', 'action_id', 'location_id', 'file_format')
+@extend_schema(tags=['LiDAR Scans'])
 class LidarScanViewSet(GlobalRecordViewSet):
     queryset = LidarScan.objects.select_related('mission', 'action', 'location').order_by('-captured_at', 'id')
     serializer_class = LidarScanSerializer
@@ -124,6 +130,7 @@ class LidarScanViewSet(GlobalRecordViewSet):
 
 
 @record_schema('asset_id', 'mission_id', 'action_id', 'lidar_scan_id', 'model_id', 'modality', 'review_status')
+@extend_schema(tags=['ML Detections'])
 class MLAnomalyDetectionViewSet(GlobalRecordViewSet):
     queryset = MLAnomalyDetection.objects.select_related('asset', 'mission', 'action', 'lidar_scan').order_by('-processed_at', 'id')
     serializer_class = MLAnomalyDetectionSerializer
@@ -145,6 +152,7 @@ class MLAnomalyDetectionViewSet(GlobalRecordViewSet):
 
 
 @record_schema('mission_id')
+@extend_schema(tags=['Replays'])
 class ReplayViewSet(GlobalRecordViewSet):
     queryset = Replay.objects.annotate(event_count=Count('events')).order_by('-created_at', 'id')
     serializer_class = ReplaySerializer
@@ -152,6 +160,7 @@ class ReplayViewSet(GlobalRecordViewSet):
 
 
 @record_schema('replay_id', 'mission_id', 'action_id', 'event_type')
+@extend_schema(tags=['Replay Events'])
 class ReplayEventViewSet(GlobalRecordViewSet):
     queryset = ReplayEvent.objects.select_related('replay', 'mission', 'action').order_by('replay_id', 'sequence', 'id')
     serializer_class = ReplayEventSerializer
@@ -159,6 +168,7 @@ class ReplayEventViewSet(GlobalRecordViewSet):
 
 
 @record_schema('validation_status')
+@extend_schema(tags=['Import Reports'])
 class ImportReportViewSet(GlobalRecordViewSet):
     queryset = ImportReport.objects.order_by('-created_at', 'id')
     serializer_class = ImportReportSerializer
