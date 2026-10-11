@@ -1,3 +1,4 @@
+import { apiURL } from "./apiConfig";
 import type {
   DashboardData,
   Finding,
@@ -19,18 +20,18 @@ export async function loadDashboard(
   if (mode === "demo")
     return getJSON<DashboardData>("/demo/dashboard.json", signal);
   const [health, metrics, missions, findings] = await Promise.all([
-    getJSON<{ status: string }>("/api/health", signal),
-    getJSON<Metrics>("/api/metrics", signal),
+    getJSON<{ status: string }>(apiURL("health"), signal),
+    getJSON<Metrics>(apiURL("metrics"), signal),
     getJSON<{ results: Mission[]; next: string | null }>(
-      "/api/missions?limit=500",
+      apiURL("missions?limit=500"),
       signal,
     ),
     getJSON<{ results: Finding[]; next: string | null }>(
-      "/api/findings?limit=500",
+      apiURL("findings?limit=500"),
       signal,
     ),
   ]);
-  if (health.status !== "ok") throw new Error("The local API is not healthy");
+  if (health.status !== "ok") throw new Error("The inspection API is not healthy");
   if (missions.next || findings.next)
     throw new Error(
       "This prototype supports up to 500 missions and findings; extend pagination before using a larger dataset.",
