@@ -345,7 +345,7 @@ export default function App() {
             >
               <span className="action-label">
                 <Play aria-hidden="true" />
-                Replay relay
+                Replay missions
               </span>
               <ArrowRight aria-hidden="true" />
             </a>
