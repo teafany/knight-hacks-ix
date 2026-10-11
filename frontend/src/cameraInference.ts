@@ -1,3 +1,5 @@
+import { API_BASE_URL } from './apiConfig'
+
 export type CameraModel = 'gauge' | 'corrosion' | 'thermal'
 
 export interface InferenceResult {
@@ -102,7 +104,7 @@ export async function streamCameraInference(options: CameraOptions): Promise<voi
         else body.append('roi', JSON.stringify(options.roi))
       }
       if (model === 'thermal') body.append('compatible_thermogram', 'true')
-      const response = await fetch(`${options.apiBase ?? '/api'}/inference/${model}`, {
+      const response = await fetch(`${(options.apiBase ?? API_BASE_URL).replace(/\/+$/, '')}/inference/${model}`, {
         method: 'POST', body, signal, credentials: 'omit',
       })
       if (response.status === 429) {
