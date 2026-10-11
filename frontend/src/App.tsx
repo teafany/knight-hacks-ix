@@ -17,6 +17,7 @@ import {
 import Dashboard from "./Dashboard";
 import DatasetDashboard from "./DatasetDashboard";
 import RelayPage from "./RelayPage";
+import SummaryPage from "./SummaryPage";
 import robotImage from "./assets/spot-robot.svg";
 import "./App.css";
 
@@ -30,7 +31,7 @@ type Capability = {
   icon: LucideIcon;
 };
 
-type Page = "landing" | "lidar" | "dashboard" | "relay";
+type Page = "landing" | "lidar" | "dashboard" | "relay" | "summary";
 
 const capabilities: Capability[] = [
   {
@@ -78,10 +79,25 @@ const capabilities: Capability[] = [
     target: "relay",
     icon: Route,
   },
+  {
+    id: "inspection-summary",
+    number: "06",
+    title: "The full picture",
+    text: "Bring mission outcomes, priority findings, saved AI evidence, and spatial changes into one inspection summary.",
+    meta: "Summary / Intelligence",
+    target: "summary",
+    icon: ClipboardCheck,
+  },
 ];
 
 export default function App() {
   const [page, setPage] = useState<Page>(() => {
+    if (
+      window.location.pathname === "/summary" ||
+      window.location.hash === "#summary" ||
+      window.location.hash.startsWith("#summary-")
+    )
+      return "summary";
     if (window.location.pathname === "/relay") return "relay";
     if (window.location.hash === "#lidar") return "lidar";
     if (window.location.hash === "#dashboard") return "dashboard";
@@ -91,6 +107,14 @@ export default function App() {
 
   useEffect(() => {
     const syncRoute = () => {
+      if (
+        window.location.pathname === "/summary" ||
+        window.location.hash === "#summary" ||
+        window.location.hash.startsWith("#summary-")
+      ) {
+        setPage("summary");
+        return;
+      }
       if (window.location.pathname === "/relay") {
         setPage("relay");
         return;
@@ -98,7 +122,11 @@ export default function App() {
       if (window.location.hash === "#lidar") setPage("lidar");
       if (window.location.hash === "#dashboard") setPage("dashboard");
       if (window.location.hash === "#relay") setPage("relay");
-      if (window.location.hash === "#top") setPage("landing");
+      if (
+        window.location.hash === "#top" ||
+        (window.location.pathname === "/" && !window.location.hash)
+      )
+        setPage("landing");
     };
 
     window.addEventListener("hashchange", syncRoute);
@@ -144,6 +172,25 @@ export default function App() {
     }, 0);
   };
 
+  const openSummaryPage = () => {
+    setPage("summary");
+    window.history.pushState(null, "", "/summary");
+    window.scrollTo(0, 0);
+  };
+
+  if (page === "summary") {
+    return (
+      <SummaryPage
+        onHome={openLandingPage}
+        onNavigate={(destination) => {
+          if (destination === "dashboard") openDashboardPage();
+          if (destination === "lidar") openLidarPage();
+          if (destination === "relay") openRelayPage();
+        }}
+      />
+    );
+  }
+
   const navItems: {
     page: Page;
     label: string;
@@ -158,7 +205,12 @@ export default function App() {
       onClick: openDashboardPage,
     },
     { page: "relay", label: "Replay", icon: Play, onClick: openRelayPage },
-    { page: "lidar", label: "LiDAR", icon: Radar, onClick: () => openLidarPage() },
+    {
+      page: "lidar",
+      label: "LiDAR",
+      icon: Radar,
+      onClick: () => openLidarPage(),
+    },
   ];
 
   const appNav = (
@@ -228,7 +280,7 @@ export default function App() {
 
   return (
     <main className="site-shell">
-        <section className="hero" id="top" aria-labelledby="hero-title">
+      <section className="hero" id="top" aria-labelledby="hero-title">
         <div className="intro">
           <p className="kicker">
             <span />
@@ -237,13 +289,26 @@ export default function App() {
           <h1 id="hero-title">
             What will
             <strong>SPOT</strong>
-            <div style={{"marginTop":"-1.5rem"}}>explore?</div>
+            <div style={{ marginTop: "-1.5rem" }}>explore?</div>
           </h1>
           <p className="hero-copy">
             One operational picture for replaying autonomous inspections,
             reviewing spatial changes, and finding the events that matter.
           </p>
           <div className="actions">
+            <a
+              href="/summary"
+              onClick={(event) => {
+                event.preventDefault();
+                openSummaryPage();
+              }}
+            >
+              <span className="action-label">
+                <BarChart3 aria-hidden="true" />
+                Inspection summary
+              </span>
+              <ArrowRight aria-hidden="true" />
+            </a>
             <a
               className="integration-button"
               href="#dashboard"
@@ -295,7 +360,9 @@ export default function App() {
           <div className="mission-card">
             <p>Inspection workspace</p>
             <strong>15</strong>
-            <span>facility <br></br>waypoints</span>
+            <span>
+              facility <br></br>waypoints
+            </span>
             <div className="mission-meta">
               <span>Synthetic dataset</span>
               <span>Historical records</span>
@@ -310,7 +377,7 @@ export default function App() {
         </div>
       </section>
 
-        <section
+      <section
         className="capabilities-section"
         id="capabilities"
         aria-labelledby="capabilities-title"
@@ -341,10 +408,18 @@ export default function App() {
                 <p>{capability.text}</p>
                 <a
                   className="capability-link"
-                  href="#lidar"
+                  href={
+                    capability.target === "summary"
+                      ? "/summary"
+                      : capability.target === "relay"
+                        ? "/relay"
+                        : "/#lidar"
+                  }
                   onClick={(event) => {
                     event.preventDefault();
-                    if (capability.target === "relay") {
+                    if (capability.target === "summary") {
+                      openSummaryPage();
+                    } else if (capability.target === "relay") {
                       openRelayPage();
                     } else {
                       openLidarPage(capability.target);
@@ -359,7 +434,7 @@ export default function App() {
         </div>
       </section>
 
-        <section className="workflow-section" id="workflow">
+      <section className="workflow-section" id="workflow">
         <div className="workflow-intro">
           <p className="section-label">The mission loop</p>
           <h2>Replay. Understand. Act.</h2>
@@ -403,12 +478,12 @@ export default function App() {
         </ol>
       </section>
 
-        <footer id="contact">
+      <footer id="contact">
         <p>Autonomous inspection, made understandable.</p>
         <a href="#top">
           Back to mission <ArrowRight aria-hidden="true" />
         </a>
-        </footer>
-      </main>
+      </footer>
+    </main>
   );
 }
