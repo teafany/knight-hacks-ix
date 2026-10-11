@@ -203,23 +203,23 @@ h1 strong {
 
 .actions {
   display: grid;
-  width: min(100%, 360px);
+  width: min(100%, 300px);
   grid-template-columns: 1fr;
-  gap: 10px;
-  margin-top: 36px;
+  gap: 8px;
+  margin-top: 30px;
 }
 
 .actions > a {
   display: flex;
-  min-height: 58px;
+  min-height: 48px;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 0 22px;
+  gap: 16px;
+  padding: 0 18px;
   border-radius: 100px;
   background: #dfb238;
   font-family: "Bitcount Single", monospace;
-  font-size: 14px;
+  font-size: 12px;
   font-variation-settings: "wght" 610;
   font-weight: 600;
   transition:
@@ -232,17 +232,17 @@ h1 strong {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .action-label svg {
-  width: 19px;
-  height: 19px;
+  width: 17px;
+  height: 17px;
 }
 
 .actions > a > svg {
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
   flex: 0 0 auto;
   transition: transform 180ms ease;
 }
@@ -363,7 +363,7 @@ h1 strong {
 }
 
 .capabilities-section {
-  padding: 82px clamp(24px, 5.5vw, 84px) 90px;
+  padding: 82px clamp(20px, 4.4vw, 68px) 90px;
   background: #12120f;
   color: #f8f7f2;
 }
@@ -412,7 +412,7 @@ h1 strong {
   display: flex;
   min-height: 300px;
   flex-direction: column;
-  padding: 24px;
+  padding: 22px 20px;
   border-radius: 22px;
   background: #22221e;
   transition:
@@ -809,11 +809,11 @@ footer > * {
 .capability-link {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 22px;
   color: #dfb238;
   font-family: "Bitcount Single", monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-variation-settings: "wght" 610;
   font-weight: 610;
 }
