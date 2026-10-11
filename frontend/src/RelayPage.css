@@ -1,4 +1,5 @@
 .relay-page {
+  container-type: inline-size;
   min-height: 100svh;
   color: #f8f7f2;
   background:
@@ -706,7 +707,7 @@
   font-size: 12px;
 }
 
-@media (max-width: 980px) {
+@container (max-width: 980px) {
   .relay-layout {
     grid-template-columns: 1fr;
     height: auto;
@@ -723,7 +724,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@container (max-width: 720px) {
   .relay-stage-heading,
   .relay-controls {
     grid-template-columns: 1fr;
@@ -766,7 +767,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@container (max-width: 480px) {
   .relay-data {
     grid-template-columns: 1fr;
   }

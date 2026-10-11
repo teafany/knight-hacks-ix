@@ -212,29 +212,29 @@
     display: none;
   }
 
-  .workspace-sidebar-summary {
+  .workspace-sidebar-compact {
     padding: 17px 20px;
   }
 
-  .workspace-sidebar-summary .workspace-nav-label,
-  .workspace-sidebar-summary nav:first-of-type {
+  .workspace-sidebar-compact .workspace-nav-label,
+  .workspace-sidebar-compact nav:first-of-type {
     display: none;
   }
 
-  .workspace-sidebar-summary nav:last-of-type {
+  .workspace-sidebar-compact nav:last-of-type {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 16px;
   }
 
-  .workspace-sidebar-summary nav button {
+  .workspace-sidebar-compact nav button {
     width: auto;
     padding: 6px 8px;
     font-size: 10px;
   }
 
-  .workspace-sidebar-summary nav button svg {
+  .workspace-sidebar-compact nav button svg {
     width: 14px;
   }
 }

@@ -93,7 +93,7 @@ const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
 
       .catch((reason) => {
 
-        if (!controller.signal.aborted) setError(`Inspection data could not load: ${reason.message}`);
+        if (!controller.signal.aborted) setError(`Inspect data could not load: ${reason.message}`);
 
       })
 
@@ -1057,7 +1057,7 @@ return (
 
           Knight Hacks IX · Facility inspection{" "}
 
-          <span>Simulated inspection data</span>
+          <span>Simulated inspect data</span>
 
         </footer>
 

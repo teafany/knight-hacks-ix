@@ -507,7 +507,7 @@ function SummaryContent({
                   className="summary-text-button"
                   onClick={() => onNavigate("dashboard")}
                 >
-                  Explore facility map <ArrowRight size={16} />
+                  Open Inspect data <ArrowRight size={16} />
                 </button>
               </section>
             </div>

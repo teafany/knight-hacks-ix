@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   BarChart3,
   ChevronRight,
@@ -6,21 +6,22 @@ import {
   Cpu,
   Database,
   Home,
-  Map,
   Radar,
   Route,
+  TableProperties,
 } from "lucide-react";
 import type { SummarySelection } from "./summaryViews";
 import "./WorkspaceSidebar.css";
 
 type Props = {
-  activePage: "summary" | "lidar";
+  activePage: "landing" | "dashboard" | "summary" | "lidar" | "relay";
   selection?: SummarySelection | null;
   activeSection?: string;
   onHome: () => void;
   onNavigate: (page: "dashboard" | "lidar" | "relay") => void;
   onSummarySelect: (selection: SummarySelection | null) => void;
   onSectionSelect?: (section: string) => void;
+  children?: ReactNode;
 };
 
 const twinSections = [
@@ -38,6 +39,7 @@ export default function WorkspaceSidebar({
   onNavigate,
   onSummarySelect,
   onSectionSelect,
+  children,
 }: Props) {
   const [twinExpanded, setTwinExpanded] = useState(false);
   const inTwin = activePage === "lidar";
@@ -58,7 +60,7 @@ export default function WorkspaceSidebar({
 
   return (
     <aside
-      className={`workspace-sidebar ${activePage === "summary" ? "workspace-sidebar-summary" : ""}`}
+      className={`workspace-sidebar ${activePage !== "lidar" ? "workspace-sidebar-compact" : ""}`}
     >
       <button
         type="button"
@@ -91,13 +93,23 @@ export default function WorkspaceSidebar({
       </nav>
       <p className="workspace-nav-label">Explore workspace</p>
       <nav aria-label="Other workspaces">
-        <button type="button" onClick={onHome}>
+        <button
+          type="button"
+          className={activePage === "landing" ? "active" : ""}
+          aria-current={activePage === "landing" ? "page" : undefined}
+          onClick={onHome}
+        >
           <Home size={18} aria-hidden="true" />
           Home
         </button>
-        <button type="button" onClick={() => onNavigate("dashboard")}>
-          <Map size={18} aria-hidden="true" />
-          Facility map
+        <button
+          type="button"
+          className={activePage === "dashboard" ? "active" : ""}
+          aria-current={activePage === "dashboard" ? "page" : undefined}
+          onClick={() => onNavigate("dashboard")}
+        >
+          <TableProperties size={18} aria-hidden="true" />
+          Inspect data
         </button>
         <div className="workspace-twin-group">
           <button
@@ -143,11 +155,17 @@ export default function WorkspaceSidebar({
             </ul>
           )}
         </div>
-        <button type="button" onClick={() => onNavigate("relay")}>
+        <button
+          type="button"
+          className={activePage === "relay" ? "active" : ""}
+          aria-current={activePage === "relay" ? "page" : undefined}
+          onClick={() => onNavigate("relay")}
+        >
           <Route size={18} aria-hidden="true" />
           Mission replay
         </button>
       </nav>
+      {children}
       <div className="workspace-sidebar-footer">
         <span className="workspace-live-dot" />
         Knight Hacks IX

@@ -8,7 +8,7 @@ where it happened, and what needs attention**.
 
 Built at **Knight Hacks IX** for **NextEra Energy’s SPOT Operational Intelligence
 Challenge**, using the challenge’s synthetic dataset. The facility and robot
-movement are simulated; the dashboard shows recorded inspection data.
+movement are simulated; the Inspect data page shows recorded data.
 
 **Devpost:** https://devpost.com/software/spotlight-fxqamj
 
@@ -114,7 +114,7 @@ VITE_API_BASE_URL=/api npm run dev
 | API health check | http://127.0.0.1:8000/api/health |
 | API documentation | http://127.0.0.1:8000/api/docs |
 
-Choose **Demo data** to explore the bundled dataset or **Django API** to load your imported records. Both display historical, synthetic inspection data.
+Choose **Demo data** to explore the bundled dataset or **Django API** to load your imported records. Both display historical, synthetic records on Inspect data.
 
 ### Add simulated inference examples
 

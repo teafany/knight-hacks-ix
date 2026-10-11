@@ -10,48 +10,12 @@
   background-size: 64px 64px;
 }
 
-.dataset-rail {
-  position: sticky;
-  top: 0;
-  display: flex;
-  width: 235px;
-  height: 100vh;
-  flex-direction: column;
-  gap: 22px;
-  padding: 30px 20px;
-  border-right: 1px solid #2a2923;
-  background: #12120f;
-  overflow-y: auto;
-}
-
-.dataset-brand {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  border: 0;
-  background: transparent;
-  color: #f8f7f2;
-  text-align: left;
-}
-
-.dataset-brand span {
+.dataset-sidebar-tools {
   display: grid;
-  width: 35px;
-  height: 38px;
-  place-items: center;
-  border-radius: 50%;
-  background: #dfb238;
-  color: #12120f;
-  font-family: "Bitcount Single", monospace;
-  font-size: 22px;
-}
-
-.dataset-brand strong {
-  font-family: "Bitcount Single", monospace;
-  font-size: 23px;
-  font-variation-settings: "wght" 650;
-  font-weight: 750;
-  letter-spacing: 2px;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #2a2923;
 }
 
 .selection-rail {
@@ -1346,15 +1310,6 @@
 }
 
 @media (max-width: 900px) {
-  .dataset-rail {
-    width: 190px;
-    padding-inline: 14px;
-  }
-
-  .dataset-brand strong {
-    display: none;
-  }
-
   .rail-item-main {
     padding: 10px;
   }
@@ -1393,18 +1348,16 @@
     overflow: auto;
   }
 
-  .dataset-rail {
-    position: static;
-    flex-direction: row;
-    width: 100%;
-    height: auto;
+  .dataset-sidebar-tools {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    overflow-x: auto;
-    overflow-y: visible;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    min-width: 0;
   }
 
-  .dataset-brand strong,
   .selection-rail strong,
   .selection-rail span {
     display: initial;
@@ -1413,6 +1366,7 @@
 
   .selection-rail {
     display: flex;
+    min-width: 0;
     overflow-x: auto;
     padding-bottom: 4px;
   }
