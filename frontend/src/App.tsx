@@ -304,10 +304,9 @@ export default function App() {
   }
 
   return (
-    <div className="workspace-page-shell">
+    <>
       {appNav}
-      {workspaceSidebar}
-      <main className="site-shell workspace-page-content">
+      <main className="site-shell">
         <section className="hero" id="top" aria-labelledby="hero-title">
           <div className="intro">
             <p className="kicker">
@@ -513,6 +512,6 @@ export default function App() {
           </a>
         </footer>
       </main>
-    </div>
+    </>
   );
 }
