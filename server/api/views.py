@@ -64,12 +64,13 @@ class FindingListView(ListAPIView):
         # findings that require review.
         query = FindingQuerySerializer(data=dict(self.request.query_params.items()))
         query.is_valid(raise_exception=True)
-        return Anomaly.objects.filter(**query.validated_data).select_related('asset', 'location').order_by('timestamp', 'anomaly_id')
+        return Anomaly.objects.filter(**query.validated_data).select_related('asset', 'location', 'ml_detection').order_by('timestamp', 'anomaly_id')
 
 
+@extend_schema(tags=['Dashboard'])
 class FindingDetailView(RetrieveAPIView):
     serializer_class = FindingSerializer
-    queryset = Anomaly.objects.select_related('asset', 'location')
+    queryset = Anomaly.objects.select_related('asset', 'location', 'ml_detection')
     lookup_field = 'anomaly_id'
 
 

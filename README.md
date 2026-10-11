@@ -51,7 +51,7 @@ stateless model inference. **PostgreSQL** stores inspection records, replay
 events, and saved machine learning results. The importer connects the challenge’s
 original datasets without modifying their source files.
 
-Our LiDAR pipeline uses **Open3D** to align point clouds and identify changes. 
+Our LiDAR pipeline uses **Open3D** to align point clouds and identify changes.
 **PyTorch** powers our machine learning models. We also used **AMD AI compute** during development and deployed the application on **Vultr**.
 
 ### Technology Used
@@ -114,6 +114,18 @@ VITE_API_BASE_URL=/api npm run dev
 | API documentation | http://127.0.0.1:8000/api/docs |
 
 Choose **Demo data** to explore the bundled dataset or **Django API** to load your imported records. Both display historical, synthetic inspection data.
+
+### Add simulated inference examples
+
+After importing the challenge data, optionally add simulated model results:
+
+```sh
+.venv/bin/python server/manage.py seed_simulated_inference
+```
+
+This adds nine simulated inference results and six linked findings under mission
+`SIM-AI-M001`. Results are labeled `[SIMULATED]` and do not run the models.
+Rerunning the command preserves reviews without creating duplicates.
 
 ### Test and build
 
