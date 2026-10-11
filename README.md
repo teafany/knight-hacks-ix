@@ -1,10 +1,75 @@
-# knight-hacks-ix
+# Spotlight
 
-Robotic facility inspection dashboard for Knight Hacks IX. React displays
-mission analytics, findings, and a simulated LiDAR room; Django REST Framework
-serves the local inspection data. All supplied operational data is synthetic.
+◝(ᵔᗜᵔ)◜ **Turning robot data into actionable insights**
 
-## Prerequisites
+Spotlight is a facility inspection dashboard that connects mission history,
+sensor readings, and spatial data so operators can explore **what happened,
+where it happened, and what needs attention**.
+
+Built at **Knight Hacks IX** for **NextEra Energy’s SPOT Operational Intelligence
+Challenge**, using the challenge’s synthetic dataset. The facility and robot
+movement are simulated; the dashboard shows recorded inspection data.
+
+**Devpost:** https://devpost.com/software/spotlight-fxqamj
+
+---
+
+## Inspiration
+
+Robotic inspections can collect a lot of useful information, but understanding
+that information is a different challenge. Mission logs, sensor readings, and
+spatial data can feel disconnected when someone is trying to figure out what
+happened and what needs attention.
+
+NextEra Energy’s challenge asked us to bring those pieces together into something
+an operator could understand and act on. We built **Spotlight** to make inspection
+data easier to explore and give users a clearer view of the facility they are
+looking at.
+
+---
+
+## Features
+
+- **Mission overview:** Compare mission completion, action outcomes, and inspection findings.
+- **Interactive digital twin:** Explore a simulated facility in 3D, select waypoints, and view historical findings and synthetic obstructions.
+- **Mission replay:** Play back recorded mission events and follow SPOT’s simulated movement through the facility.
+- **Dataset exploration:** Browse the challenge data and explore relationships between missions, actions, readings, anomalies, assets, and locations.
+- **LiDAR change detection:** Align point clouds and group geometric changes into possible obstructions for the digital twin.
+- **Machine learning APIs:** Run gauge detection, corrosion classification, thermal-image classification, and experimental acoustic analysis through backend endpoints.
+- **Demo and API modes:** Explore a bundled dataset snapshot or connect the dashboard to Django inspection records.
+
+---
+
+## Architecture & Tech Stack
+
+We built the frontend with **React and TypeScript**, using **Vite** for development
+and builds. **Three.js** displays the facility model, waypoints, and obstruction
+overlays in the digital twin.
+
+The **Django REST Framework** backend serves dashboard data, record APIs, and
+stateless model inference. **PostgreSQL** stores inspection records, replay
+events, and saved machine learning results. The importer connects the challenge’s
+original datasets without modifying their source files.
+
+Our LiDAR pipeline uses **Open3D** to align point clouds and identify changes. 
+**PyTorch** powers our machine learning models. We also used **AMD AI compute** during development and deployed the application on **Vultr**.
+
+### Technology Used
+
+- **Frontend:** React, TypeScript, Vite, Three.js
+- **Backend:** Python, Django, Django REST Framework
+- **Database:** PostgreSQL
+- **Machine learning:** PyTorch, OpenCV
+- **LiDAR processing:** Open3D, NumPy
+- **AI compute:** AMD AI compute
+- **Deployment:** Vultr
+- **Local development:** Docker Compose
+
+---
+
+## Getting Started
+
+### Prerequisites
 
 - Python 3.10 or newer (tested with Python 3.14).
 - Node.js 22.12 or newer (tested with Node.js 24) and npm.
@@ -13,7 +78,14 @@ serves the local inspection data. All supplied operational data is synthetic.
 The commands below are for macOS/Linux and run from the repository root unless
 otherwise stated. No virtual environment activation is required.
 
-## First-time setup
+### First-time setup
+
+Clone the repository, then run the setup commands from its root:
+
+```sh
+git clone https://github.com/teafany/knight-hacks-ix.git
+cd knight-hacks-ix
+```
 
 ```sh
 python3 -m venv .venv
@@ -25,139 +97,51 @@ export DATABASE_URL='postgresql://knight_hacks:knight_hacks_dev@127.0.0.1:5432/k
 .venv/bin/python server/manage.py import_challenge_data
 ```
 
-The importer reads all six original CSVs, `replay.ndjson`, and
-`validation_results.json` in `SPOT_KnightHacks_Challenge_Kit Part One/02_DATA/`
-and stores them in PostgreSQL. It leaves the source files unchanged. Repeated
-imports skip identical records; conflicting IDs or invalid rows roll back the
-entire import. Replay events retain source order, including equal timestamps.
-Docker stores the database in the persistent `postgres_data` volume.
+The importer loads the challenge datasets into PostgreSQL without changing the source files or duplicating existing records.
 
-All records are global. There are no application users, accounts, login routes,
-ownership fields, or authentication sessions. Keep this unauthenticated API on
-a trusted local/private network; do not expose it publicly.
+### Start the project
 
-## Start the project
-
-Start the frontend and backend together:
+Run the frontend and backend together using your local API:
 
 ```sh
-npm run dev
+VITE_API_BASE_URL=/api npm run dev
 ```
 
 | Service | URL |
 | --- | --- |
-| React dashboard | http://localhost:5173 |
-| Django API | http://127.0.0.1:8000/api/health |
-| Swagger API docs | http://127.0.0.1:8000/api/docs |
+| Dashboard | http://localhost:5173 |
+| API health check | http://127.0.0.1:8000/api/health |
+| API documentation | http://127.0.0.1:8000/api/docs |
 
-**Ctrl+C stops both servers.** The launcher also stops the other server if one
-fails. On macOS/Linux, frontend and backend changes reload automatically.
+Choose **Demo data** to explore the bundled dataset or **Django API** to load your imported records. Both display historical, synthetic inspection data.
 
-The dashboard defaults to **Demo data**, a bundled snapshot of the synthetic
-challenge dataset. Choose **Django API** to load records from your local database.
-Both modes display historical data, not live robot telemetry. API failures clear
-previous values and display an error; they do not silently substitute demo data.
-
-Vite proxies `/api` requests to Django on port 8000. The frontend uses port 5173
-and does not automatically switch ports if it is occupied. These are local
-development servers, not a production deployment.
-
-For a persistent backend on an Ubuntu server, see
-[backend deployment](docs/deployment.md) for Gunicorn, Nginx, PostgreSQL,
-model runtime installation, and service management.
-
-## Run a service independently
-
-For the frontend alone, including demo mode without Django:
-
-```sh
-npm --prefix frontend run dev
-```
-
-For the backend alone:
-
-```sh
-.venv/bin/python server/manage.py runserver 127.0.0.1:8000
-```
-
-If running both independently, use separate terminals and stop each with Ctrl+C.
-
-## Checks and frontend build
+### Test and build
 
 ```sh
 .venv/bin/python server/manage.py check
 .venv/bin/python server/manage.py test api
-.venv/bin/python server/manage.py spectacular --validate --fail-on-warn
-npm --prefix frontend run build
+VITE_API_BASE_URL=/api npm --prefix frontend run build
 ```
 
-The frontend build is written to `frontend/dist/`. To preview that build:
+The frontend build is saved to `frontend/dist/`.
 
-```sh
-npm --prefix frontend run preview
-```
+---
 
-Open the URL printed by Vite. Demo mode works without Django. For Django API
-mode, start the backend separately; the preview inherits the local `/api` proxy.
+## Additional Documentation
 
-## Update the demo snapshot
+- [Deployment guide](docs/deployment.md)
+- [Model inference APIs](docs/inference-api.md)
+- [Database and record APIs](docs/database-api.md)
+- [LiDAR integration](frontend/INTEGRATION.md)
 
-After migrating and importing the local dataset, regenerate the bundled snapshot:
+---
 
-```sh
-.venv/bin/python frontend/scripts/export_demo.py
-```
+## What’s Next
 
-This updates `frontend/public/demo/dashboard.json` using the Django API
-serializers. It does not require a running Django server.
+We would like to improve our models, test them on more representative data, and keep refining the interface.
 
-## Backend configuration
+---
 
-Django reads `DJANGO_DEBUG`, `DJANGO_SECRET_KEY`, and `DJANGO_ALLOWED_HOSTS`
-(comma-separated) from environment variables. Local defaults enable debug and
-use a development-only key. Disabling debug requires an explicit secret key.
-Environment files are not automatically loaded; export variables in your shell.
-CORS allows the React origin `http://localhost:5173`.
-
-`DATABASE_URL` selects PostgreSQL and supports optional `sslmode` and
-`connect_timeout` query parameters. Defaults match the local Compose database;
-see `.env.example`. PostgreSQL tests create and remove a separate
-`test_knight_hacks` database, so the test connection needs `CREATEDB` permission.
-For an explicit lightweight fallback, export `DJANGO_DB_BACKEND=sqlite` before
-migrating. Existing SQLite data is not copied or deleted automatically.
-
-The source timestamps have no timezone. The importer assumes UTC by default;
-use `--source-timezone <IANA timezone>` when importing a fresh database if a
-different source convention is confirmed. Dashboard timestamps display UTC.
-
-## Troubleshooting
-
-- **Missing dependencies:** run the first-time setup commands above.
-- **Missing database tables:** run `migrate`, then `import_challenge_data`.
-- **Database connection refused:** start PostgreSQL with
-  `docker compose up -d --wait postgres` or your local PostgreSQL installation.
-  Only one database server can bind port 5432; use a different `POSTGRES_PORT`
-  and matching `DATABASE_URL` when necessary.
-- **Empty API dashboard:** import the dataset, select Django API, and refresh.
-- **API unavailable:** confirm Django is running on port 8000. Demo mode remains
-  available when you explicitly select it.
-- **Port already in use:** stop the existing server before running `npm run dev`.
-
-See [LiDAR integration notes](frontend/INTEGRATION.md) for asset formats,
-coordinate conventions, and the prototype's limitations.
-
-## Camera and Model Inference
-
-Stateless frame/audio endpoints are available under `/api/inference/` for the
-registered gauge, corrosion, thermal, and experimental acoustic checkpoints.
-Install `server/requirements-inference.txt` for model execution. Webcam, browser,
-and Spot SDK camera clients send independent frame requests without server-side
-camera sessions. See [inference setup, API contracts, and camera commands](docs/inference-api.md).
-
-## Global Records and Replays
-
-Full CRUD is available for locations, assets, missions, actions, readings,
-anomalies, LiDAR scans, ML detections, replays, replay events, and import reports
-under `/api/records/`. Existing dashboard and inference routes remain unchanged.
-All operations are documented in Swagger at `/api/docs`.
-See [database schemas, API contracts, and examples](docs/database-api.md).
+*Built together at Knight Hacks IX.*
+<br>
+*Made with love by Carlos, Zhiting, Anthony, and Tiffany, the 16 Eyes Team (we all wear glasses).*
