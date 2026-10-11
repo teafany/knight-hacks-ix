@@ -14,7 +14,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from .models import Action, Anomaly, Asset, Location, Mission, Reading
+from .models import Action, Anomaly, Asset, ImportReport, Location, Mission, Reading, Replay
 
 DATA_DIR = settings.BASE_DIR.parent / 'SPOT_KnightHacks_Challenge_Kit Part One' / '02_DATA'
 
@@ -119,17 +119,17 @@ class ImportTests(TestCase):
 
     def test_missing_foreign_key_rolls_back_entire_first_import(self):
         # Remove records in this isolated test database, respecting PROTECT.
-        for model in [Reading, Anomaly, Action, Asset, Mission, Location]:
+        for model in [Replay, ImportReport, Reading, Anomaly, Action, Asset, Mission, Location]:
             model.objects.all().delete()
         with TemporaryDirectory() as directory:
             target = self.changed_dataset(directory, 'readings.csv', lambda rows: rows[0].update(action_id='MISSING'))
             with self.assertRaisesRegex(CommandError, r'readings.csv: row 2.*action.*MISSING.*not a valid choice'):
                 import_data(target)
-        for model in [Reading, Anomaly, Action, Asset, Mission, Location]:
+        for model in [Replay, ImportReport, Reading, Anomaly, Action, Asset, Mission, Location]:
             self.assertEqual(model.objects.count(), 0)
 
     def test_mismatched_relationship_rejected(self):
-        for model in [Reading, Anomaly, Action, Asset, Mission, Location]:
+        for model in [Replay, ImportReport, Reading, Anomaly, Action, Asset, Mission, Location]:
             model.objects.all().delete()
         with TemporaryDirectory() as directory:
             target = self.changed_dataset(directory, 'readings.csv', lambda rows: rows[0].update(mission_id='M001'))

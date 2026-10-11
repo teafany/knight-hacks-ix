@@ -84,7 +84,7 @@ class InferenceResultSerializer(serializers.Serializer):
     model_sha256 = serializers.CharField()
     source_sha256 = serializers.CharField()
     asset_id = serializers.CharField()
-    frame_id = serializers.CharField()
+    frame_id = serializers.CharField(allow_blank=True)
     captured_at = serializers.DateTimeField(allow_null=True)
     processed_at = serializers.DateTimeField()
     inference_ms = serializers.FloatField()
