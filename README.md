@@ -6,9 +6,9 @@ Spotlight is a facility inspection dashboard that connects mission history,
 sensor readings, and spatial data so operators can explore **what happened,
 where it happened, and what needs attention**.
 
-Built at **Knight Hacks IX** for **NextEra Energy’s SPOT Operational Intelligence
-Challenge**, using the challenge’s synthetic dataset. The facility and robot
-movement are simulated; the Inspect data page shows recorded data.
+Built at **Knight Hacks IX 2026** for **NextEra Energy’s SPOT Operational Intelligence
+Challenge**, using the challenge’s synthetic dataset. Inspection records are
+historical and synthetic, and replayed robot movement is simulated.
 
 **Devpost:** https://devpost.com/software/spotlight-fxqamj
 
@@ -30,30 +30,28 @@ looking at.
 
 ## Features
 
-- **Inspection summary:** Bring mission performance, priority findings, saved AI results (including simulated examples), and spatial evidence together at `/summary`. See [summary data and setup](docs/summary-page.md).
-- **Mission overview:** Compare mission completion, action outcomes, and inspection findings.
-- **Interactive Lidar:** Explore a simulated facility in 3D, select waypoints, and view historical findings and synthetic obstructions.
-- **Mission replay:** Play back recorded mission events and follow SPOT’s simulated movement through the facility.
-- **Dataset exploration:** Browse the challenge data and explore relationships between missions, actions, readings, anomalies, assets, and locations.
-- **LiDAR change detection:** Align point clouds and group geometric changes into possible obstructions for the Lidar view.
-- **Machine learning APIs:** Run gauge detection, corrosion classification, thermal-image classification, and experimental acoustic analysis through backend endpoints.
-- **Demo and API modes:** Explore a bundled dataset snapshot or connect the dashboard to Django inspection records.
+- **Inspection summary:** Bring mission performance, priority findings, saved AI results (including simulated examples), and spatial evidence together in one view
+- **Mission overview:** Compare mission completion, action outcomes, and inspection findings
+- **Interactive LiDAR:** Explore a room scan in 3D and toggle bounding boxes around detected geometric changes
+- **Mission replay:** Play back recorded mission events and follow SPOT’s simulated movement through the facility
+- **Dataset exploration:** Browse the challenge data and explore relationships between missions, actions, readings, anomalies, assets, and locations
+- **LiDAR change detection:** Align point clouds and group geometric changes into possible obstructions for the LiDAR view
+- **Machine learning APIs:** Run gauge detection, corrosion classification, thermal-image classification, and experimental acoustic analysis through backend endpoints
+- **Demo and API modes:** Use the Summary page to explore a bundled snapshot or load backend inspection records
 
 ---
 
 ## Architecture & Tech Stack
 
-We built the frontend with **React and TypeScript**, using **Vite** for development
-and builds. **Three.js** displays the facility model, waypoints, and obstruction
-overlays in the Lidar view.
+We built the frontend with **React, TypeScript, and Vite**, and deployed the
+application on **Vultr**. **Three.js** powers the 3D LiDAR view. **Django REST Framework** serves
+inspection data and model inference, while **PostgreSQL** stores records and saved results.
 
-The **Django REST Framework** backend serves dashboard data, record APIs, and
-stateless model inference. **PostgreSQL** stores inspection records, replay
-events, and saved machine learning results. The importer connects the challenge’s
-original datasets without modifying their source files.
+**Open3D** aligns point clouds and detects changes. **PyTorch** powers our machine
+learning models, and we used **AMD AI compute** during development.
 
-Our LiDAR pipeline uses **Open3D** to align point clouds and identify changes.
-**PyTorch** powers our machine learning models. We also used **AMD AI compute** during development and deployed the application on **Vultr**.
+**Vultr** hosts Spotlight’s frontend, backend APIs, PostgreSQL database, and
+machine learning inference, bringing the project together in one online application.
 
 ### Technology Used
 
@@ -63,7 +61,7 @@ Our LiDAR pipeline uses **Open3D** to align point clouds and identify changes.
 - **Machine learning:** PyTorch, OpenCV
 - **LiDAR processing:** Open3D, NumPy
 - **AI compute:** AMD AI compute
-- **Deployment:** Vultr
+- **Hosting:** Vultr for the frontend, backend APIs, PostgreSQL, and model inference
 - **Local development:** Docker Compose
 
 ---
@@ -72,12 +70,9 @@ Our LiDAR pipeline uses **Open3D** to align point clouds and identify changes.
 
 ### Prerequisites
 
-- Python 3.10 or newer (tested with Python 3.14).
-- Node.js 22.12 or newer (tested with Node.js 24) and npm.
-- PostgreSQL 17 (or Docker with Compose to run the included database).
-
-The commands below are for macOS/Linux and run from the repository root unless
-otherwise stated. No virtual environment activation is required.
+- Python 3.10 or newer
+- Node.js 22.12 or newer and npm
+- PostgreSQL 17 (or Docker with Compose to run the included database)
 
 ### First-time setup
 
@@ -97,12 +92,9 @@ export DATABASE_URL='postgresql://knight_hacks:knight_hacks_dev@127.0.0.1:5432/k
 .venv/bin/python server/manage.py migrate
 .venv/bin/python server/manage.py import_challenge_data
 ```
-
-The importer loads the challenge datasets into PostgreSQL without changing the source files or duplicating existing records.
-
 ### Start the project
 
-Run the frontend and backend together using your local API:
+Run the frontend and backend together:
 
 ```sh
 VITE_API_BASE_URL=/api npm run dev
@@ -114,20 +106,6 @@ VITE_API_BASE_URL=/api npm run dev
 | API health check | http://127.0.0.1:8000/api/health |
 | API documentation | http://127.0.0.1:8000/api/docs |
 
-Choose **Demo data** to explore the bundled dataset or **Django API** to load your imported records. Both display historical, synthetic records on Inspect data.
-
-### Add simulated inference examples
-
-After importing the challenge data, optionally add simulated model results:
-
-```sh
-.venv/bin/python server/manage.py seed_simulated_inference
-```
-
-This adds nine simulated inference results and six linked findings under mission
-`SIM-AI-M001`. Results are labeled `[SIMULATED]` and do not run the models.
-Rerunning the command preserves reviews without creating duplicates.
-
 ### Test and build
 
 ```sh
@@ -136,14 +114,12 @@ Rerunning the command preserves reviews without creating duplicates.
 VITE_API_BASE_URL=/api npm --prefix frontend run build
 ```
 
-The frontend build is saved to `frontend/dist/`.
-
 ---
 
 ## Additional Documentation
 
 - [Deployment guide](docs/deployment.md)
-- [Model inference APIs](docs/inference-api.md)
+- [Model inference APIs and simulated examples](docs/inference-api.md)
 - [Database and record APIs](docs/database-api.md)
 - [LiDAR integration](frontend/INTEGRATION.md)
 
@@ -155,6 +131,4 @@ We would like to improve our models, test them on more representative data, and 
 
 ---
 
-*Built together at Knight Hacks IX.*
-<br>
-*Made with love by Carlos, Zhiting, Anthony, and Tiffany, the 16 Eyes Team (we all wear glasses).*
+*Made with love by [Carlos](https://www.linkedin.com/in/carlomen/), [Zhiting](https://www.linkedin.com/in/zhitingli/), [Anthony](https://www.linkedin.com/in/l-anthony/), and [Tiffany](https://www.linkedin.com/in/ttiffanychen/), the 16 Eyes Team (we all wear glasses).*
